@@ -1,0 +1,106 @@
+import { describe, expect, it } from "vitest";
+
+import { EMPTY_CELL } from "./elements";
+import { createWorld, type WorldDefinition } from "./world";
+
+describe("createWorld", () => {
+  it("spawns particles from top emitters and moves them deterministically", () => {
+    const definition: WorldDefinition = {
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: {
+            end: 2,
+            start: 2,
+          },
+          ratePerTick: 1,
+        },
+      ],
+      height: 5,
+      seed: 7,
+      width: 5,
+    };
+
+    const first = createWorld(definition);
+    const second = createWorld(definition);
+
+    for (let index = 0; index < 4; index += 1) {
+      first.step();
+      second.step();
+    }
+
+    expect(first.snapshot().cells).toEqual(second.snapshot().cells);
+    expect(first.snapshot().particleCounts).toEqual([{ count: 4, element: "water" }]);
+  });
+
+  it("moves water downward before spreading sideways", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 0, "water");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe(EMPTY_CELL);
+    expect(world.getCell(1, 1)).toBe("water");
+  });
+
+  it("lets water spread horizontally when lower cells are blocked", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 1, "water");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(3, 2, "sand");
+    world.step();
+
+    expect(world.getCell(2, 1)).toBe(EMPTY_CELL);
+    expect([world.getCell(1, 1), world.getCell(3, 1)]).toContain("water");
+  });
+
+  it("piles sand when straight downward movement is blocked", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 1, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(1, 3, "sand");
+    world.setCell(2, 3, "sand");
+    world.setCell(3, 3, "sand");
+    world.step();
+
+    expect(world.getCell(2, 1)).toBe(EMPTY_CELL);
+    expect([world.getCell(1, 2), world.getCell(3, 2)]).toContain("sand");
+  });
+
+  it("does not move sand horizontally on a flat blocked row", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 1, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(3, 2, "sand");
+    world.step();
+
+    expect(world.getCell(2, 1)).toBe("sand");
+  });
+});
