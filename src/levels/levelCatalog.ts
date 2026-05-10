@@ -92,7 +92,7 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       buckets: [
         {
           id: "steam-bucket",
-          intake: "top",
+          intake: "bottom",
           rect: {
             height: 24,
             width: 30,

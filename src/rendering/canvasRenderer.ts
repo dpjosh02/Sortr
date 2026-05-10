@@ -95,12 +95,28 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
         context.beginPath();
         context.moveTo(x, y);
         context.lineTo(x, y + height);
-        context.lineTo(x + width, y + height);
+
+        if (bucket.intake !== "bottom") {
+          context.lineTo(x + width, y + height);
+        } else {
+          context.moveTo(x + width, y + height);
+        }
+
         context.lineTo(x + width, y);
+
+        if (bucket.intake === "bottom") {
+          context.lineTo(x, y);
+        }
+
         context.stroke();
 
         context.fillStyle = getBucketFillColor(bucket.target);
-        context.fillRect(x, y - options.cellSize * 2, width, options.cellSize);
+        context.fillRect(
+          x,
+          bucket.intake === "bottom" ? y + height + options.cellSize : y - options.cellSize * 2,
+          width,
+          options.cellSize,
+        );
       }
     },
   };

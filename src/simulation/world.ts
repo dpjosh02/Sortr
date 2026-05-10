@@ -32,7 +32,7 @@ export interface BucketDefinition {
   readonly target: ElementType;
   readonly required: number;
   readonly rect: GridRect;
-  readonly intake: "full-rect" | "top";
+  readonly intake: "bottom" | "full-rect" | "top";
 }
 
 export interface ParticleCount {
@@ -58,7 +58,7 @@ export interface BucketSnapshot {
   readonly accepted: number;
   readonly settled: number;
   readonly rect: GridRect;
-  readonly intake: "full-rect" | "top";
+  readonly intake: "bottom" | "full-rect" | "top";
 }
 
 export interface World {
@@ -744,8 +744,11 @@ function getBucketCellFill(
 
 function getBucketInteriorCells(bucket: BucketDefinition): GridPoint[] {
   const cells: GridPoint[] = [];
-  const startY = bucket.rect.y;
-  const endY = bucket.rect.y + bucket.rect.height - 2;
+  const startY = bucket.intake === "bottom" ? bucket.rect.y + 1 : bucket.rect.y;
+  const endY =
+    bucket.intake === "top"
+      ? bucket.rect.y + bucket.rect.height - 2
+      : bucket.rect.y + bucket.rect.height - 1;
   const startX = bucket.rect.x + 1;
   const endX = bucket.rect.x + bucket.rect.width - 2;
 
@@ -973,7 +976,15 @@ function isBucketDefinitionWallCell(bucket: BucketDefinition, x: number, y: numb
     return false;
   }
 
-  return x === rect.x || x === rect.x + rect.width - 1 || y === rect.y + rect.height - 1;
+  if (x === rect.x || x === rect.x + rect.width - 1) {
+    return true;
+  }
+
+  if (bucket.intake === "bottom") {
+    return y === rect.y;
+  }
+
+  return y === rect.y + rect.height - 1;
 }
 
 function getWaterAmount(state: MutableWorldState, x: number, y: number): number {

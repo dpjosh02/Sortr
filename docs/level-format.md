@@ -58,11 +58,11 @@ type BucketDefinition = {
     width: number;
     height: number;
   };
-  intake: "top" | "full-rect";
+  intake: "top" | "bottom" | "full-rect";
 };
 ```
 
-MVP buckets only accept pure matching elements. Wrong elements do not count. Buckets behave as open-top containers: their left, right, and bottom borders block material, only the top opening accepts material, and fill progress is measured from matching material currently settled inside the bucket interior.
+MVP buckets only accept pure matching elements. Wrong elements do not count. Buckets behave as open containers: side walls block material, the wall opposite the intake blocks material, and the intake side stays open. Falling materials usually use `top`; rising gases such as steam use `bottom`. Fill progress is measured from matching material currently settled inside the bucket interior.
 
 ## Obstacles
 

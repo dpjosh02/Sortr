@@ -243,7 +243,7 @@ For MVP:
 - Only matching pure elements count.
 - Wrong elements do not count.
 - Matching elements remain in the simulation and settle inside the bucket volume.
-- Buckets are open-top containers. Left, right, and bottom bucket borders block material; only the top opening accepts material.
+- Buckets are open containers. Side walls block material, the wall opposite the configured intake blocks material, and the configured intake side stays open. Falling materials usually use top intake; rising gases such as steam use bottom intake.
 - Fill progress is measured from the matching material currently inside the bucket interior. Water uses a small completion tolerance because liquid volume is fractional.
 - Filled buckets can either continue accepting matching elements or become blocked after completion. This should be tuned during playtesting.
 

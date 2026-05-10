@@ -611,6 +611,41 @@ describe("createWorld", () => {
     expect(world.snapshot().buckets[0]?.accepted).toBe(0);
   });
 
+  it("lets bottom-opening buckets catch rising steam while blocking their top", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "steam-goal",
+          intake: "bottom",
+          rect: {
+            height: 4,
+            width: 3,
+            x: 1,
+            y: 0,
+          },
+          required: 1,
+          target: "steam",
+        },
+      ],
+      emitters: [],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 4, "steam");
+
+    for (let index = 0; index < 4; index += 1) {
+      world.step();
+    }
+
+    const snapshot = world.snapshot();
+    expect(snapshot.buckets[0]?.accepted).toBe(1);
+    expect([world.getCell(2, 1), world.getCell(2, 2), world.getCell(2, 3)]).toContain("steam");
+    expect(world.snapshot().isComplete).toBe(true);
+    expect(world.getCell(2, 0)).toBe(EMPTY_CELL);
+  });
+
   it("lets sandbox brushes add elements without replacing existing solids", () => {
     const world = createWorld({
       emitters: [],
