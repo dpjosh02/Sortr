@@ -3,9 +3,14 @@ import "./styles.css";
 import { createGameLoop } from "../game/loop";
 import { createActionMap } from "../input/actionMap";
 import { getCanvasGridPoint } from "../input/pointer";
-import { getInitialLevel, getLevelByIndex, getNextLevelIndex } from "../levels/levelCatalog";
+import {
+  LEVEL_CATALOG,
+  getInitialLevel,
+  getLevelByIndex,
+  getNextLevelIndex,
+} from "../levels/levelCatalog";
 import { createCanvasRenderer } from "../rendering/canvasRenderer";
-import type { ElementType } from "../simulation/elements";
+import { ELEMENTS, type ElementType } from "../simulation/elements";
 import { getLineCells, type GridPoint } from "../simulation/lines";
 import { createWorld } from "../simulation/world";
 
@@ -44,11 +49,28 @@ nextButton.type = "button";
 nextButton.textContent = "Next";
 nextButton.hidden = true;
 
-type BrushMode = "line" | "sand" | "water";
+type BrushMode = ElementType | "line";
 
-const brushModes: readonly BrushMode[] = ["line", "water", "sand"];
+const brushModes: readonly BrushMode[] = ["line", ...ELEMENTS];
 const brushButtons = new Map<BrushMode, HTMLButtonElement>();
 let selectedBrush: BrushMode = "line";
+
+const levelSelect = document.createElement("select");
+levelSelect.className = "level-select";
+levelSelect.setAttribute("aria-label", "Level");
+
+for (let index = 0; index < LEVEL_CATALOG.length; index += 1) {
+  const catalogLevel = LEVEL_CATALOG[index];
+
+  if (catalogLevel === undefined) {
+    continue;
+  }
+
+  const option = document.createElement("option");
+  option.value = String(index);
+  option.textContent = `${String(index + 1)}. ${catalogLevel.title}`;
+  levelSelect.append(option);
+}
 
 const brushPalette = document.createElement("div");
 brushPalette.className = "brush-palette";
@@ -70,7 +92,7 @@ status.className = "status-line";
 
 const toolbar = document.createElement("div");
 toolbar.className = "toolbar";
-toolbar.append(brushPalette, resetButton, nextButton, debugButton);
+toolbar.append(levelSelect, brushPalette, resetButton, nextButton, debugButton);
 
 const header = document.createElement("header");
 header.className = "app-header";
@@ -127,6 +149,14 @@ nextButton.addEventListener("click", () => {
   }
 });
 
+levelSelect.addEventListener("change", () => {
+  const index = Number(levelSelect.value);
+
+  if (Number.isInteger(index)) {
+    loadLevel(index);
+  }
+});
+
 debugButton.addEventListener("click", () => {
   debugEnabled = !debugEnabled;
   debugButton.toggleAttribute("aria-pressed", debugEnabled);
@@ -175,18 +205,11 @@ window.addEventListener("keydown", (event) => {
     debugButton.click();
   }
 
-  if (event.key === "1") {
-    selectedBrush = "line";
-    syncBrushButtons();
-  }
+  const numericBrushIndex = Number(event.key) - 1;
+  const keyboardBrush = brushModes[numericBrushIndex];
 
-  if (event.key === "2") {
-    selectedBrush = "water";
-    syncBrushButtons();
-  }
-
-  if (event.key === "3") {
-    selectedBrush = "sand";
+  if (keyboardBrush !== undefined) {
+    selectedBrush = keyboardBrush;
     syncBrushButtons();
   }
 });
@@ -226,6 +249,7 @@ function loadLevel(index: number): void {
   world = createWorld(level.world);
   canvas.width = level.world.width * level.cellSize;
   canvas.height = level.world.height * level.cellSize;
+  levelSelect.value = String(index);
   render();
 }
 
@@ -291,12 +315,9 @@ function syncBrushButtons(): void {
 }
 
 function getBrushLabel(brush: BrushMode): string {
-  switch (brush) {
-    case "line":
-      return "Line";
-    case "sand":
-      return "Sand";
-    case "water":
-      return "Water";
+  if (brush === "line") {
+    return "Line";
   }
+
+  return `${brush.charAt(0).toUpperCase()}${brush.slice(1)}`;
 }

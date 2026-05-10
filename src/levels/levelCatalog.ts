@@ -130,6 +130,65 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e7e5dd",
+    cellSize: 4,
+    id: "004-two-streams",
+    title: "Two Streams",
+    world: {
+      buckets: [
+        {
+          id: "water-bucket",
+          intake: "top",
+          rect: {
+            height: 24,
+            width: 28,
+            x: 24,
+            y: 126,
+          },
+          required: 45,
+          target: "water",
+        },
+        {
+          id: "sand-bucket",
+          intake: "top",
+          rect: {
+            height: 24,
+            width: 30,
+            x: 184,
+            y: 126,
+          },
+          required: 55,
+          target: "sand",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: {
+            end: 75,
+            start: 69,
+          },
+          ratePerTick: 0.75,
+        },
+        {
+          edge: "top",
+          element: "sand",
+          id: "sand-source",
+          range: {
+            end: 141,
+            start: 135,
+          },
+          ratePerTick: 0.65,
+        },
+      ],
+      height: 160,
+      seed: 20260510,
+      width: 240,
+    },
+  },
 ];
 
 export function getInitialLevel(): LevelDefinition {

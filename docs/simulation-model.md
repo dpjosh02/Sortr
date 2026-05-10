@@ -225,7 +225,7 @@ Player drawing stamps line cells along the pointer path using grid-space interpo
 - Have no ink limit.
 - May be dissolved by acid later.
 
-During sandbox tuning, the toolbar exposes line, water, and sand brushes. Element brushes add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid.
+During sandbox tuning, the toolbar exposes line plus every element registered in `ELEMENTS`. Element brushes add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid. New elements should be added to the registry first so they automatically become sandbox spawn options.
 
 ## Bucket Logic
 
