@@ -415,6 +415,72 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe(-1);
   });
 
+  it("turns water and fire neighbors into steam", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "fire");
+    world.step();
+
+    expect(totalWater(world)).toBeCloseTo(0);
+    expect(countElementCells(world, "fire")).toBe(0);
+    expect(countElementCells(world, "steam")).toBe(1);
+  });
+
+  it("moves steam upward and blocks it with drawn lines", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 2, "steam");
+    world.step();
+
+    expect(world.getCell(1, 1)).toBe("steam");
+
+    world.addLineSegment({ x: 0, y: 0 }, { x: 2, y: 0 });
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe(-1);
+  });
+
+  it("counts steam settled inside matching buckets", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "steam-goal",
+          intake: "top",
+          rect: {
+            height: 3,
+            width: 3,
+            x: 1,
+            y: 0,
+          },
+          required: 1,
+          target: "steam",
+        },
+      ],
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 1, "steam");
+    world.step();
+
+    expect(world.snapshot().buckets[0]?.accepted).toBe(1);
+    expect(world.snapshot().isComplete).toBe(true);
+    expect(world.getCell(2, 0)).toBe("steam");
+  });
+
   it("counts matching material that physically settles inside a bucket", () => {
     const world = createWorld({
       buckets: [

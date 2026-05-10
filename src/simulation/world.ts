@@ -218,6 +218,7 @@ export function createWorld(definition: WorldDefinition): World {
     step(): void {
       spawnFromEmitters(state);
       processBuckets(state);
+      processReactions(state);
       moveParticles(state);
       processBuckets(state);
       state.tick += 1;
@@ -290,6 +291,8 @@ function moveParticles(state: MutableWorldState): void {
   const displacedWater = Array<boolean>(state.cells.length).fill(false);
 
   moveParticleFamily(state, moved, displacedWater, "sand");
+  moveParticleFamily(state, moved, displacedWater, "steam");
+  moveParticleFamily(state, moved, displacedWater, "fire");
   flowWater(state);
 }
 
@@ -317,9 +320,80 @@ function moveParticleFamily(
 
       if (element === "sand") {
         moveSand(state, moved, displacedWater, x, y);
+      } else if (element === "steam") {
+        moveSteam(state, moved, x, y);
+      } else if (element === "fire") {
+        moveFire(state, moved, x, y);
       }
     }
   }
+}
+
+function processReactions(state: MutableWorldState): void {
+  const steamCells: GridPoint[] = [];
+  const consumedWater = new Set<number>();
+  const consumedFire = new Set<number>();
+
+  for (let y = 0; y < state.height; y += 1) {
+    for (let x = 0; x < state.width; x += 1) {
+      const index = toIndex(state, x, y);
+
+      if (state.cells[index] !== "fire" || consumedFire.has(index)) {
+        continue;
+      }
+
+      const waterNeighbor = findWaterNeighbor(state, x, y, consumedWater);
+
+      if (waterNeighbor === null) {
+        continue;
+      }
+
+      consumedWater.add(toIndex(state, waterNeighbor.x, waterNeighbor.y));
+      consumedFire.add(index);
+      steamCells.push({ x, y });
+    }
+  }
+
+  for (const index of consumedWater) {
+    state.water[index] = 0;
+  }
+
+  for (const index of consumedFire) {
+    state.cells[index] = EMPTY_CELL;
+  }
+
+  for (const cell of steamCells) {
+    const index = toIndex(state, cell.x, cell.y);
+
+    if (!isBucketWallCell(state, cell.x, cell.y) && isEmpty(state.cells[index] ?? EMPTY_CELL)) {
+      state.cells[index] = "steam";
+    }
+  }
+}
+
+function findWaterNeighbor(
+  state: MutableWorldState,
+  x: number,
+  y: number,
+  consumedWater: ReadonlySet<number>,
+): GridPoint | null {
+  for (const neighbor of getNeighborCells(x, y)) {
+    if (!isInside(state, neighbor.x, neighbor.y)) {
+      continue;
+    }
+
+    const index = toIndex(state, neighbor.x, neighbor.y);
+
+    if (consumedWater.has(index)) {
+      continue;
+    }
+
+    if (getWaterAmount(state, neighbor.x, neighbor.y) > MIN_WATER) {
+      return neighbor;
+    }
+  }
+
+  return null;
 }
 
 function moveSand(
@@ -341,6 +415,68 @@ function moveSand(
   }
 
   trySettleSubmergedSand(state, moved, displacedWater, x, y);
+}
+
+function moveSteam(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
+  const side = state.random.pickDirection();
+  const candidates = [
+    { x, y: y - 1 },
+    { x: x + side, y: y - 1 },
+    { x: x - side, y: y - 1 },
+    { x: x + side, y },
+    { x: x - side, y },
+  ];
+
+  tryMoveGasOrEnergyToFirstAvailableCell(state, moved, x, y, candidates);
+}
+
+function moveFire(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
+  const side = state.random.pickDirection();
+  const candidates = [
+    { x, y: y - 1 },
+    { x: x + side, y },
+    { x: x - side, y },
+  ];
+
+  tryMoveGasOrEnergyToFirstAvailableCell(state, moved, x, y, candidates);
+}
+
+function tryMoveGasOrEnergyToFirstAvailableCell(
+  state: MutableWorldState,
+  moved: boolean[],
+  fromX: number,
+  fromY: number,
+  candidates: readonly GridPoint[],
+): void {
+  const fromIndex = toIndex(state, fromX, fromY);
+  const movingCell = state.cells[fromIndex] ?? EMPTY_CELL;
+
+  if (!isElement(movingCell)) {
+    return;
+  }
+
+  for (const candidate of candidates) {
+    if (!isInside(state, candidate.x, candidate.y)) {
+      continue;
+    }
+
+    const targetIndex = toIndex(state, candidate.x, candidate.y);
+    const targetCell = state.cells[targetIndex] ?? EMPTY_CELL;
+
+    if (
+      isDiagonalCornerBlocked(state, fromX, fromY, candidate.x, candidate.y) ||
+      isBucketWallCell(state, candidate.x, candidate.y) ||
+      !isEmpty(targetCell) ||
+      getWaterAmount(state, candidate.x, candidate.y) > MIN_WATER
+    ) {
+      continue;
+    }
+
+    state.cells[targetIndex] = movingCell;
+    state.cells[fromIndex] = EMPTY_CELL;
+    moved[targetIndex] = true;
+    return;
+  }
 }
 
 function tryMoveToFirstAvailableCell(
@@ -762,6 +898,19 @@ function getOrthogonalNeighbors(x: number, y: number): GridPoint[] {
     { x: x - 1, y },
     { x: x + 1, y },
     { x, y: y - 1 },
+  ];
+}
+
+function getNeighborCells(x: number, y: number): GridPoint[] {
+  return [
+    { x: x - 1, y: y - 1 },
+    { x, y: y - 1 },
+    { x: x + 1, y: y - 1 },
+    { x: x - 1, y },
+    { x: x + 1, y },
+    { x: x - 1, y: y + 1 },
+    { x, y: y + 1 },
+    { x: x + 1, y: y + 1 },
   ];
 }
 

@@ -199,7 +199,8 @@ Initial recommendation:
 
 For the first implementation, prefer the simpler rule:
 
-- Water cell becomes steam.
+- Steam is created at the fire cell.
+- The neighboring water volume is consumed.
 - Fire cell becomes empty.
 
 If that makes levels too easy or fire too fragile, revise after playtesting.

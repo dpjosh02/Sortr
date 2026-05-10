@@ -83,6 +83,53 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e3e9e7",
+    cellSize: 4,
+    id: "003-make-it-rise",
+    title: "Make It Rise",
+    world: {
+      buckets: [
+        {
+          id: "steam-bucket",
+          intake: "top",
+          rect: {
+            height: 24,
+            width: 30,
+            x: 154,
+            y: 24,
+          },
+          required: 18,
+          target: "steam",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: {
+            end: 66,
+            start: 60,
+          },
+          ratePerTick: 0.8,
+        },
+        {
+          edge: "bottom",
+          element: "fire",
+          id: "fire-source",
+          range: {
+            end: 132,
+            start: 126,
+          },
+          ratePerTick: 0.35,
+        },
+      ],
+      height: 160,
+      seed: 20260510,
+      width: 240,
+    },
+  },
 ];
 
 export function getInitialLevel(): LevelDefinition {
