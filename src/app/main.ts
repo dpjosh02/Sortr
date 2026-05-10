@@ -5,7 +5,8 @@ import { createActionMap } from "../input/actionMap";
 import { getCanvasGridPoint } from "../input/pointer";
 import { getInitialLevel } from "../levels/levelCatalog";
 import { createCanvasRenderer } from "../rendering/canvasRenderer";
-import type { GridPoint } from "../simulation/lines";
+import type { ElementType } from "../simulation/elements";
+import { getLineCells, type GridPoint } from "../simulation/lines";
 import { createWorld } from "../simulation/world";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -37,12 +38,33 @@ const debugButton = document.createElement("button");
 debugButton.type = "button";
 debugButton.textContent = "Debug";
 
+type BrushMode = "line" | "sand" | "water";
+
+const brushModes: readonly BrushMode[] = ["line", "water", "sand"];
+const brushButtons = new Map<BrushMode, HTMLButtonElement>();
+let selectedBrush: BrushMode = "line";
+
+const brushPalette = document.createElement("div");
+brushPalette.className = "brush-palette";
+
+for (const brush of brushModes) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = getBrushLabel(brush);
+  button.addEventListener("click", () => {
+    selectedBrush = brush;
+    syncBrushButtons();
+  });
+  brushButtons.set(brush, button);
+  brushPalette.append(button);
+}
+
 const status = document.createElement("p");
 status.className = "status-line";
 
 const toolbar = document.createElement("div");
 toolbar.className = "toolbar";
-toolbar.append(resetButton, debugButton);
+toolbar.append(brushPalette, resetButton, debugButton);
 
 const header = document.createElement("header");
 header.className = "app-header";
@@ -59,6 +81,7 @@ const actions = createActionMap();
 let debugEnabled = false;
 let activePointerId: number | null = null;
 let previousDrawPoint: GridPoint | null = null;
+syncBrushButtons();
 
 function render(): void {
   const snapshot = world.snapshot();
@@ -68,7 +91,7 @@ function render(): void {
   });
   status.textContent = debugEnabled
     ? `${level.title} | tick ${String(snapshot.tick)} | ${formatParticleCounts(snapshot.particleCounts)}`
-    : `${level.title} | deterministic water and sand flow`;
+    : `${level.title} | ${getBrushLabel(selectedBrush)} brush`;
 }
 
 const loop = createGameLoop({
@@ -102,7 +125,7 @@ canvas.addEventListener("pointerdown", (event) => {
   activePointerId = event.pointerId;
   canvas.setPointerCapture(event.pointerId);
   previousDrawPoint = getDrawPoint(event);
-  world.addLineCell(previousDrawPoint.x, previousDrawPoint.y);
+  applyBrushPoint(previousDrawPoint);
   render();
 });
 
@@ -112,7 +135,7 @@ canvas.addEventListener("pointermove", (event) => {
   }
 
   const nextPoint = getDrawPoint(event);
-  world.addLineSegment(previousDrawPoint, nextPoint);
+  applyBrushSegment(previousDrawPoint, nextPoint);
   previousDrawPoint = nextPoint;
   render();
 });
@@ -134,6 +157,21 @@ window.addEventListener("keydown", (event) => {
 
   if (action === "toggle-debug") {
     debugButton.click();
+  }
+
+  if (event.key === "1") {
+    selectedBrush = "line";
+    syncBrushButtons();
+  }
+
+  if (event.key === "2") {
+    selectedBrush = "water";
+    syncBrushButtons();
+  }
+
+  if (event.key === "3") {
+    selectedBrush = "sand";
+    syncBrushButtons();
   }
 });
 
@@ -168,4 +206,53 @@ function endDraw(pointerId: number): void {
 
   activePointerId = null;
   previousDrawPoint = null;
+}
+
+function applyBrushPoint(point: GridPoint): void {
+  if (selectedBrush === "line") {
+    world.addLineCell(point.x, point.y);
+    return;
+  }
+
+  stampElement(point, selectedBrush);
+}
+
+function applyBrushSegment(start: GridPoint, end: GridPoint): void {
+  if (selectedBrush === "line") {
+    world.addLineSegment(start, end);
+    return;
+  }
+
+  for (const point of getLineCells(start, end)) {
+    stampElement(point, selectedBrush);
+  }
+}
+
+function stampElement(point: GridPoint, element: ElementType): void {
+  const radius = 1;
+
+  for (let y = point.y - radius; y <= point.y + radius; y += 1) {
+    for (let x = point.x - radius; x <= point.x + radius; x += 1) {
+      if (Math.abs(x - point.x) + Math.abs(y - point.y) <= radius) {
+        world.addElementCell(x, y, element);
+      }
+    }
+  }
+}
+
+function syncBrushButtons(): void {
+  for (const [brush, button] of brushButtons) {
+    button.toggleAttribute("aria-pressed", brush === selectedBrush);
+  }
+}
+
+function getBrushLabel(brush: BrushMode): string {
+  switch (brush) {
+    case "line":
+      return "Line";
+    case "sand":
+      return "Sand";
+    case "water":
+      return "Water";
+  }
 }

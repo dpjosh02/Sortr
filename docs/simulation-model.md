@@ -76,7 +76,7 @@ MVP phases:
 
 Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by moving into that liquid's occupied space and redistributing the liquid volume into nearby connected liquid capacity.
 
-Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids are not moved into the powder's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed when the displaced water volume has connected capacity to move into. A liquid volume cell that has already been displaced during the current tick cannot be displaced again until the next tick; this prevents multiple sand particles from chain-pushing the same volume through a pile in a single frame.
+Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids are not moved into the powder's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed when the displaced water volume has connected capacity to move into. A liquid volume cell that has already been displaced during the current tick cannot be displaced again until the next tick; this prevents multiple loose sand particles from chain-pushing the same volume through a pile in a single frame. A tall enough vertical sand column can override that per-tick guard with pressure and search farther through connected liquid capacity, so redirected piles can begin sinking through water instead of being propped up by the surface.
 
 Diagonal particle movement must respect line corners. If two player-drawn line cells touch diagonally, particles cannot pass between their shared corner.
 
@@ -220,6 +220,8 @@ Player drawing stamps line cells along the pointer path using grid-space interpo
 - Are not individually erasable.
 - Have no ink limit.
 - May be dissolved by acid later.
+
+During sandbox tuning, the toolbar exposes line, water, and sand brushes. Element brushes add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid.
 
 ## Bucket Logic
 

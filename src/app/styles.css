@@ -71,6 +71,17 @@ button[aria-pressed] {
   gap: 8px;
 }
 
+.brush-palette {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+}
+
+.brush-palette button {
+  min-width: 58px;
+}
+
 .game-shell {
   display: grid;
   gap: 10px;
@@ -103,6 +114,7 @@ button[aria-pressed] {
 
   .toolbar {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   button {

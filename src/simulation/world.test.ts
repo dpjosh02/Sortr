@@ -150,6 +150,32 @@ describe("createWorld", () => {
     expect(waterCellCount(world)).toBeGreaterThan(1);
   });
 
+  it("lets a tall sand column pressure-displace water without losing water volume", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 0, "sand");
+    world.setCell(2, 1, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(1, 3, "water");
+    world.setCell(2, 3, "water");
+    world.setCell(3, 3, "water");
+    world.setCell(0, 4, "sand");
+    world.setCell(1, 4, "sand");
+    world.setCell(2, 4, "sand");
+    world.setCell(3, 4, "sand");
+    world.setCell(4, 4, "sand");
+    world.step();
+
+    expect(world.getCell(2, 3)).toBe("sand");
+    expect(totalWater(world)).toBeCloseTo(3);
+    expect(waterCellCount(world)).toBeGreaterThan(2);
+  });
+
   it("does not let sand displace water when the water has no lateral escape", () => {
     const world = createWorld({
       emitters: [],
@@ -338,6 +364,24 @@ describe("createWorld", () => {
 
     expect(world.snapshot().particleCounts).toEqual([]);
     expect(world.getCell(1, 0)).toBe(-1);
+  });
+
+  it("lets sandbox brushes add elements without replacing existing solids", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.addElementCell(1, 1, "water");
+    world.addElementCell(1, 1, "sand");
+    world.addElementCell(0, 1, "sand");
+    world.addElementCell(0, 1, "water");
+
+    expect(world.getCell(1, 1)).toBe("sand");
+    expect(world.getCell(0, 1)).toBe("sand");
+    expect(totalWater(world)).toBeCloseTo(1);
   });
 
   it("clears drawn lines when the world is recreated for reset", () => {

@@ -37,6 +37,7 @@ export interface World {
   readonly width: number;
   readonly height: number;
   readonly tick: number;
+  addElementCell(x: number, y: number, element: ElementType): void;
   addLineCell(x: number, y: number): void;
   addLineSegment(start: GridPoint, end: GridPoint): void;
   getCell(x: number, y: number): CellValue;
@@ -61,6 +62,8 @@ const WATER_FLOW_PASSES = 3;
 const WATER_SIDE_FLOW = 0.45;
 const WATER_EQUALIZE_FLOW = 0.25;
 const DISPLACEMENT_SEARCH_RADIUS = 10;
+const PRESSURE_DISPLACEMENT_SEARCH_RADIUS = 40;
+const SAND_PRESSURE_COLUMN_HEIGHT = 3;
 
 export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("width", definition.width);
@@ -85,6 +88,46 @@ export function createWorld(definition: WorldDefinition): World {
     },
     get width(): number {
       return state.width;
+    },
+    addElementCell(x: number, y: number, element: ElementType): void {
+      if (!isInside(state, x, y)) {
+        return;
+      }
+
+      const index = toIndex(state, x, y);
+      const cell = state.cells[index] ?? EMPTY_CELL;
+
+      if (!isEmpty(cell)) {
+        return;
+      }
+
+      if (element === "water") {
+        state.water[index] = Math.min(MAX_WATER, (state.water[index] ?? 0) + MAX_WATER);
+        return;
+      }
+
+      const waterAmount = getWaterAmount(state, x, y);
+
+      if (
+        waterAmount > MIN_WATER &&
+        (!canDisplace(element, "water") ||
+          !displaceWaterForSolid(
+            state,
+            Array<boolean>(state.cells.length).fill(false),
+            x,
+            y,
+            waterAmount,
+            {
+              ignoreDisplacedWater: true,
+              searchRadius: PRESSURE_DISPLACEMENT_SEARCH_RADIUS,
+            },
+          ))
+      ) {
+        return;
+      }
+
+      state.water[index] = 0;
+      state.cells[index] = element;
     },
     addLineCell(x: number, y: number): void {
       if (!isInside(state, x, y)) {
@@ -279,9 +322,18 @@ function tryMoveToFirstAvailableCell(
     }
 
     if (isEmpty(targetCell) && targetWater > MIN_WATER && canDisplace(movingCell, "water")) {
+      const hasSandPressure =
+        movingCell === "sand" &&
+        getSandColumnHeight(state, fromX, fromY) >= SAND_PRESSURE_COLUMN_HEIGHT;
+
       if (
-        displacedWater[targetIndex] === true ||
-        !displaceWaterForSolid(state, displacedWater, candidate.x, candidate.y, targetWater)
+        (!hasSandPressure && displacedWater[targetIndex] === true) ||
+        !displaceWaterForSolid(state, displacedWater, candidate.x, candidate.y, targetWater, {
+          ignoreDisplacedWater: hasSandPressure,
+          searchRadius: hasSandPressure
+            ? PRESSURE_DISPLACEMENT_SEARCH_RADIUS
+            : DISPLACEMENT_SEARCH_RADIUS,
+        })
       ) {
         continue;
       }
@@ -391,15 +443,23 @@ function displaceWaterForSolid(
   targetX: number,
   targetY: number,
   amount: number,
+  options: {
+    readonly ignoreDisplacedWater: boolean;
+    readonly searchRadius: number;
+  },
 ): boolean {
   const targetIndex = toIndex(state, targetX, targetY);
-  const candidates = getWaterDisplacementCandidates(state, targetX, targetY);
+  const candidates = getWaterDisplacementCandidates(state, targetX, targetY, options.searchRadius);
   let remaining = amount;
 
   for (const candidate of candidates) {
     const candidateIndex = toIndex(state, candidate.x, candidate.y);
 
     if (candidateIndex === targetIndex) {
+      continue;
+    }
+
+    if (!options.ignoreDisplacedWater && displacedWater[candidateIndex] === true) {
       continue;
     }
 
@@ -427,6 +487,7 @@ function getWaterDisplacementCandidates(
   state: MutableWorldState,
   startX: number,
   startY: number,
+  searchRadius: number,
 ): GridPoint[] {
   const queue: GridPoint[] = [{ x: startX, y: startY }];
   const visited = new Set<number>([toIndex(state, startX, startY)]);
@@ -442,7 +503,7 @@ function getWaterDisplacementCandidates(
       continue;
     }
 
-    if (Math.abs(current.x - startX) + Math.abs(current.y - startY) > DISPLACEMENT_SEARCH_RADIUS) {
+    if (Math.abs(current.x - startX) + Math.abs(current.y - startY) > searchRadius) {
       continue;
     }
 
@@ -475,6 +536,20 @@ function getWaterDisplacementCandidates(
       Math.abs(left.y - startY) - Math.abs(right.y - startY) ||
       Math.abs(left.x - startX) - Math.abs(right.x - startX),
   );
+}
+
+function getSandColumnHeight(state: MutableWorldState, x: number, y: number): number {
+  let height = 0;
+
+  for (let scanY = y; scanY >= 0; scanY -= 1) {
+    if (state.cells[toIndex(state, x, scanY)] !== "sand") {
+      break;
+    }
+
+    height += 1;
+  }
+
+  return height;
 }
 
 function getOrthogonalNeighbors(x: number, y: number): GridPoint[] {
