@@ -131,6 +131,8 @@ Default preference:
 
 Powders should pile naturally and should not spread horizontally like liquids.
 
+When a sand grain is submerged or touching water, it gets an additional settling pass after normal movement. The grain searches downward through connected liquid cells and moves toward the lowest water-occupied cell it can displace, stopping at drawn lines, world bounds, or other solids. This keeps sand sinking through pools until it reaches solid support while preserving sand count and water volume.
+
 ### Gases
 
 Examples: steam.

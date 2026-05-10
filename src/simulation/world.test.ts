@@ -176,6 +176,55 @@ describe("createWorld", () => {
     expect(waterCellCount(world)).toBeGreaterThan(2);
   });
 
+  it("keeps submerged sand sinking toward solid support while conserving water", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 8,
+      seed: 1,
+      width: 5,
+    });
+
+    for (let y = 2; y <= 6; y += 1) {
+      world.setCell(1, y, "water");
+      world.setCell(2, y, "water");
+      world.setCell(3, y, "water");
+    }
+
+    world.addElementCell(2, 2, "sand");
+
+    for (let index = 0; index < 4; index += 1) {
+      world.step();
+    }
+
+    expect(world.getCell(2, 6)).toBe("sand");
+    expect(totalWater(world)).toBeCloseTo(15);
+    expect(countElementCells(world, "sand")).toBe(1);
+  });
+
+  it("does not let submerged sand settle through drawn lines", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 6,
+      seed: 1,
+      width: 5,
+    });
+
+    for (let y = 1; y <= 4; y += 1) {
+      world.setCell(2, y, "water");
+    }
+
+    world.setCell(2, 1, "sand");
+    world.addLineSegment({ x: 1, y: 3 }, { x: 3, y: 3 });
+
+    for (let index = 0; index < 4; index += 1) {
+      world.step();
+    }
+
+    expect(world.getCell(2, 2)).toBe("sand");
+    expect(world.getCell(2, 3)).toBe(-1);
+    expect(countElementCells(world, "sand")).toBe(1);
+  });
+
   it("does not let sand displace water when the water has no lateral escape", () => {
     const world = createWorld({
       emitters: [],
@@ -430,4 +479,8 @@ function waterBelowRow(world: ReturnType<typeof createWorld>, row: number): numb
 
 function waterCellCount(world: ReturnType<typeof createWorld>): number {
   return world.snapshot().water.filter((amount) => amount > 0.01).length;
+}
+
+function countElementCells(world: ReturnType<typeof createWorld>, element: string): number {
+  return world.snapshot().cells.filter((cell) => cell === element).length;
 }

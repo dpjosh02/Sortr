@@ -64,6 +64,7 @@ const WATER_EQUALIZE_FLOW = 0.25;
 const DISPLACEMENT_SEARCH_RADIUS = 10;
 const PRESSURE_DISPLACEMENT_SEARCH_RADIUS = 40;
 const SAND_PRESSURE_COLUMN_HEIGHT = 3;
+const SUBMERGED_SETTLE_DISTANCE = 12;
 
 export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("width", definition.width);
@@ -283,7 +284,11 @@ function moveSand(
     { x: x - side, y: y + 1 },
   ];
 
-  tryMoveToFirstAvailableCell(state, moved, displacedWater, x, y, candidates);
+  if (tryMoveToFirstAvailableCell(state, moved, displacedWater, x, y, candidates)) {
+    return;
+  }
+
+  trySettleSubmergedSand(state, moved, displacedWater, x, y);
 }
 
 function tryMoveToFirstAvailableCell(
@@ -293,12 +298,12 @@ function tryMoveToFirstAvailableCell(
   fromX: number,
   fromY: number,
   candidates: readonly { readonly x: number; readonly y: number }[],
-): void {
+): boolean {
   const fromIndex = toIndex(state, fromX, fromY);
   const movingCell = state.cells[fromIndex] ?? EMPTY_CELL;
 
   if (!isElement(movingCell)) {
-    return;
+    return false;
   }
 
   for (const candidate of candidates) {
@@ -318,7 +323,7 @@ function tryMoveToFirstAvailableCell(
       state.cells[targetIndex] = movingCell;
       state.cells[fromIndex] = EMPTY_CELL;
       moved[targetIndex] = true;
-      return;
+      return true;
     }
 
     if (isEmpty(targetCell) && targetWater > MIN_WATER && canDisplace(movingCell, "water")) {
@@ -342,9 +347,85 @@ function tryMoveToFirstAvailableCell(
       state.cells[fromIndex] = EMPTY_CELL;
       state.water[targetIndex] = 0;
       moved[targetIndex] = true;
-      return;
+      return true;
     }
   }
+
+  return false;
+}
+
+function trySettleSubmergedSand(
+  state: MutableWorldState,
+  moved: boolean[],
+  displacedWater: boolean[],
+  fromX: number,
+  fromY: number,
+): void {
+  if (!isSandTouchingWater(state, fromX, fromY)) {
+    return;
+  }
+
+  const target = findSubmergedSandSettleTarget(state, fromX, fromY);
+
+  if (target === null) {
+    return;
+  }
+
+  const targetIndex = toIndex(state, target.x, target.y);
+  const targetWater = getWaterAmount(state, target.x, target.y);
+
+  if (
+    targetWater <= MIN_WATER ||
+    !displaceWaterForSolid(state, displacedWater, target.x, target.y, targetWater, {
+      ignoreDisplacedWater: true,
+      searchRadius: PRESSURE_DISPLACEMENT_SEARCH_RADIUS,
+    })
+  ) {
+    return;
+  }
+
+  const fromIndex = toIndex(state, fromX, fromY);
+  state.cells[fromIndex] = EMPTY_CELL;
+  state.cells[targetIndex] = "sand";
+  state.water[targetIndex] = 0;
+  moved[targetIndex] = true;
+}
+
+function findSubmergedSandSettleTarget(
+  state: MutableWorldState,
+  fromX: number,
+  fromY: number,
+): GridPoint | null {
+  let best: GridPoint | null = null;
+
+  for (let y = fromY + 1; y < state.height && y <= fromY + SUBMERGED_SETTLE_DISTANCE; y += 1) {
+    const verticalCell = state.cells[toIndex(state, fromX, y)] ?? EMPTY_CELL;
+
+    if (!isEmpty(verticalCell)) {
+      break;
+    }
+
+    if (getWaterAmount(state, fromX, y) > MIN_WATER) {
+      best = { x: fromX, y };
+      continue;
+    }
+
+    if (best !== null) {
+      break;
+    }
+  }
+
+  return best;
+}
+
+function isSandTouchingWater(state: MutableWorldState, x: number, y: number): boolean {
+  for (const neighbor of getOrthogonalNeighbors(x, y)) {
+    if (getWaterAmount(state, neighbor.x, neighbor.y) > MIN_WATER) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function isDiagonalCornerBlocked(
@@ -585,7 +666,7 @@ function pruneWater(state: MutableWorldState): void {
   for (let index = 0; index < state.water.length; index += 1) {
     const amount = state.water[index] ?? 0;
 
-    if (amount < MIN_WATER) {
+    if (amount < Number.EPSILON) {
       state.water[index] = 0;
     } else if (amount > MAX_WATER) {
       state.water[index] = MAX_WATER;
