@@ -251,17 +251,20 @@ function tryMoveToFirstAvailableCell(
       return;
     }
 
-    if (
-      !isVerticalDownwardMove(fromX, fromY, candidate.x, candidate.y) ||
-      !isElement(targetCell) ||
-      !canDisplace(movingCell, targetCell)
-    ) {
+    if (!isElement(targetCell) || !canDisplace(movingCell, targetCell)) {
+      continue;
+    }
+
+    const displacementCell = findLateralDisplacementCell(state, moved, candidate.x, candidate.y);
+
+    if (displacementCell === null) {
       continue;
     }
 
     state.cells[targetIndex] = movingCell;
-    state.cells[fromIndex] = targetCell;
-    moved[fromIndex] = true;
+    state.cells[fromIndex] = EMPTY_CELL;
+    state.cells[toIndex(state, displacementCell.x, displacementCell.y)] = targetCell;
+    moved[toIndex(state, displacementCell.x, displacementCell.y)] = true;
     moved[targetIndex] = true;
     return;
   }
@@ -284,13 +287,39 @@ function isDiagonalCornerBlocked(
   return isDrawnLine(horizontalCorner) && isDrawnLine(verticalCorner);
 }
 
-function isVerticalDownwardMove(
-  fromX: number,
-  fromY: number,
+function findLateralDisplacementCell(
+  state: MutableWorldState,
+  moved: readonly boolean[],
   targetX: number,
   targetY: number,
-): boolean {
-  return fromX === targetX && targetY > fromY;
+): GridPoint | null {
+  const side = state.random.pickDirection();
+  const candidates = [
+    { x: targetX + side, y: targetY },
+    { x: targetX - side, y: targetY },
+  ];
+
+  for (const candidate of candidates) {
+    if (!isInside(state, candidate.x, candidate.y)) {
+      continue;
+    }
+
+    const candidateIndex = toIndex(state, candidate.x, candidate.y);
+
+    if (moved[candidateIndex] === true) {
+      continue;
+    }
+
+    if (isDiagonalCornerBlocked(state, targetX, targetY, candidate.x, candidate.y)) {
+      continue;
+    }
+
+    if (isEmpty(state.cells[candidateIndex] ?? EMPTY_CELL)) {
+      return candidate;
+    }
+  }
+
+  return null;
 }
 
 function countParticles(cells: readonly CellValue[]): ParticleCount[] {

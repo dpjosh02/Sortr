@@ -104,7 +104,7 @@ describe("createWorld", () => {
     expect(world.getCell(2, 1)).toBe("sand");
   });
 
-  it("lets denser sand sink through water and push water upward", () => {
+  it("lets denser sand sink through water and push water sideways", () => {
     const world = createWorld({
       emitters: [],
       height: 3,
@@ -119,8 +119,30 @@ describe("createWorld", () => {
     world.setCell(2, 2, "sand");
     world.step();
 
-    expect(world.getCell(1, 0)).toBe("water");
+    expect(world.getCell(1, 0)).toBe(EMPTY_CELL);
     expect(world.getCell(1, 1)).toBe("sand");
+    expect([world.getCell(0, 1), world.getCell(2, 1)]).toContain("water");
+  });
+
+  it("does not let sand displace water when the water has no lateral escape", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.setCell(0, 1, "sand");
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "sand");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("sand");
+    expect(world.getCell(1, 1)).toBe("water");
   });
 
   it("does not let water displace denser sand", () => {
@@ -218,12 +240,12 @@ describe("createWorld", () => {
     expect(world.getCell(1, 1)).toBe(EMPTY_CELL);
   });
 
-  it("does not let sand diagonally displace water uphill", () => {
+  it("lets sand diagonally displace water when the water escapes sideways", () => {
     const world = createWorld({
       emitters: [],
       height: 3,
       seed: 1,
-      width: 3,
+      width: 4,
     });
 
     world.setCell(1, 0, "sand");
@@ -233,10 +255,12 @@ describe("createWorld", () => {
     world.setCell(0, 2, "sand");
     world.setCell(1, 2, "sand");
     world.setCell(2, 2, "sand");
+    world.setCell(3, 2, "sand");
     world.step();
 
-    expect(world.getCell(1, 0)).toBe("sand");
-    expect(world.getCell(2, 1)).toBe("water");
+    expect(world.getCell(1, 0)).toBe(EMPTY_CELL);
+    expect(world.getCell(2, 1)).toBe("sand");
+    expect(world.getCell(3, 1)).toBe("water");
   });
 
   it("does not spawn particles into drawn line cells", () => {
