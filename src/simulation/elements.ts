@@ -6,6 +6,32 @@ export type ElementType = (typeof ELEMENTS)[number];
 
 export type CellValue = typeof EMPTY_CELL | ElementType;
 
+export type ElementPhase = "energy" | "gas" | "liquid" | "powder";
+
+export interface ElementDefinition {
+  readonly density: number;
+  readonly phase: ElementPhase;
+}
+
+export const ELEMENT_DEFINITIONS: Readonly<Record<ElementType, ElementDefinition>> = {
+  fire: {
+    density: 0,
+    phase: "energy",
+  },
+  sand: {
+    density: 2.2,
+    phase: "powder",
+  },
+  steam: {
+    density: 0.1,
+    phase: "gas",
+  },
+  water: {
+    density: 1,
+    phase: "liquid",
+  },
+};
+
 export const ELEMENT_PALETTE: Readonly<Record<ElementType, readonly string[]>> = {
   fire: ["#f26d3d", "#f7a13d", "#f9d36a"],
   sand: ["#d7bd72", "#c6a85f", "#e6cf8f"],
@@ -19,4 +45,11 @@ export function isElement(value: CellValue): value is ElementType {
 
 export function isEmpty(value: CellValue): value is typeof EMPTY_CELL {
   return value === EMPTY_CELL;
+}
+
+export function canDisplace(moving: ElementType, target: ElementType): boolean {
+  const movingDefinition = ELEMENT_DEFINITIONS[moving];
+  const targetDefinition = ELEMENT_DEFINITIONS[target];
+
+  return targetDefinition.phase === "liquid" && movingDefinition.density > targetDefinition.density;
 }

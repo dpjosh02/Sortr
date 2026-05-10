@@ -60,6 +60,24 @@ Each particle should minimally track:
 - Age or lifetime when needed.
 - Temperature or state flags only when a mechanic requires them.
 
+## Element Properties
+
+Each element has a compact physical definition:
+
+- Phase.
+- Density.
+
+MVP phases:
+
+- `powder`, such as sand.
+- `liquid`, such as water.
+- `gas`, such as steam.
+- `energy`, such as fire.
+
+Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by swapping cells with it. This allows sand to sink through water and push water upward into the sand particle's previous cell.
+
+Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids.
+
 ## Cell Types
 
 ### Empty

@@ -103,4 +103,69 @@ describe("createWorld", () => {
 
     expect(world.getCell(2, 1)).toBe("sand");
   });
+
+  it("lets denser sand sink through water and push water upward", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.setCell(1, 1, "water");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("water");
+    expect(world.getCell(1, 1)).toBe("sand");
+  });
+
+  it("does not let water displace denser sand", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(0, 0, "sand");
+    world.setCell(1, 0, "water");
+    world.setCell(2, 0, "sand");
+    world.setCell(0, 1, "sand");
+    world.setCell(1, 1, "sand");
+    world.setCell(2, 1, "sand");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("water");
+    expect(world.getCell(1, 1)).toBe("sand");
+  });
+
+  it("does not let solids sink into each other", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(0, 0, "sand");
+    world.setCell(1, 0, "sand");
+    world.setCell(2, 0, "sand");
+    world.setCell(0, 1, "sand");
+    world.setCell(1, 1, "sand");
+    world.setCell(2, 1, "sand");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("sand");
+    expect(world.getCell(1, 1)).toBe("sand");
+  });
 });

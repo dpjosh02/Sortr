@@ -1,4 +1,11 @@
-import { EMPTY_CELL, type CellValue, type ElementType, isEmpty } from "./elements";
+import {
+  EMPTY_CELL,
+  canDisplace,
+  type CellValue,
+  type ElementType,
+  isElement,
+  isEmpty,
+} from "./elements";
 import { createEmitterState, type EmitterDefinition, type EmitterState } from "./emitters";
 import { createSeededRandom, type SeededRandom } from "./random";
 
@@ -134,6 +141,15 @@ function getEmitterSpawnCell(
 function moveParticles(state: MutableWorldState): void {
   const moved = Array<boolean>(state.cells.length).fill(false);
 
+  moveParticleFamily(state, moved, "sand");
+  moveParticleFamily(state, moved, "water");
+}
+
+function moveParticleFamily(
+  state: MutableWorldState,
+  moved: boolean[],
+  familyElement: ElementType,
+): void {
   for (let y = state.height - 1; y >= 0; y -= 1) {
     const leftToRight = state.random.pickDirection() === 1;
 
@@ -146,10 +162,14 @@ function moveParticles(state: MutableWorldState): void {
         continue;
       }
 
-      if (element === "water") {
-        moveWater(state, moved, x, y);
-      } else if (element === "sand") {
+      if (element !== familyElement) {
+        continue;
+      }
+
+      if (element === "sand") {
         moveSand(state, moved, x, y);
+      } else if (element === "water") {
+        moveWater(state, moved, x, y);
       }
     }
   }
@@ -165,7 +185,7 @@ function moveWater(state: MutableWorldState, moved: boolean[], x: number, y: num
     { x: x - side, y },
   ];
 
-  tryMoveToFirstOpenCell(state, moved, x, y, candidates);
+  tryMoveToFirstAvailableCell(state, moved, x, y, candidates);
 }
 
 function moveSand(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
@@ -176,10 +196,10 @@ function moveSand(state: MutableWorldState, moved: boolean[], x: number, y: numb
     { x: x - side, y: y + 1 },
   ];
 
-  tryMoveToFirstOpenCell(state, moved, x, y, candidates);
+  tryMoveToFirstAvailableCell(state, moved, x, y, candidates);
 }
 
-function tryMoveToFirstOpenCell(
+function tryMoveToFirstAvailableCell(
   state: MutableWorldState,
   moved: boolean[],
   fromX: number,
@@ -187,6 +207,11 @@ function tryMoveToFirstOpenCell(
   candidates: readonly { readonly x: number; readonly y: number }[],
 ): void {
   const fromIndex = toIndex(state, fromX, fromY);
+  const movingCell = state.cells[fromIndex] ?? EMPTY_CELL;
+
+  if (!isElement(movingCell)) {
+    return;
+  }
 
   for (const candidate of candidates) {
     if (!isInside(state, candidate.x, candidate.y)) {
@@ -194,13 +219,22 @@ function tryMoveToFirstOpenCell(
     }
 
     const targetIndex = toIndex(state, candidate.x, candidate.y);
+    const targetCell = state.cells[targetIndex] ?? EMPTY_CELL;
 
-    if (!isEmpty(state.cells[targetIndex] ?? EMPTY_CELL)) {
+    if (isEmpty(targetCell)) {
+      state.cells[targetIndex] = movingCell;
+      state.cells[fromIndex] = EMPTY_CELL;
+      moved[targetIndex] = true;
+      return;
+    }
+
+    if (!isElement(targetCell) || !canDisplace(movingCell, targetCell)) {
       continue;
     }
 
-    state.cells[targetIndex] = state.cells[fromIndex] ?? EMPTY_CELL;
-    state.cells[fromIndex] = EMPTY_CELL;
+    state.cells[targetIndex] = movingCell;
+    state.cells[fromIndex] = targetCell;
+    moved[fromIndex] = true;
     moved[targetIndex] = true;
     return;
   }
