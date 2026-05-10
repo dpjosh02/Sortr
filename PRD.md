@@ -180,4 +180,3 @@ Simulation state must not live inside rendering code. Rendering should consume s
 - Completing all buckets advances or presents the next level action.
 - Reset returns the level to a clean initial state.
 - `npm run verify` passes.
-

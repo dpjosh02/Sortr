@@ -171,4 +171,3 @@ Exit criteria:
 - Did lint, typecheck, and tests pass?
 - Is the simulation still separate from rendering?
 - Is the user prompted to test before moving on?
-

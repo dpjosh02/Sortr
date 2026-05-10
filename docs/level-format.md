@@ -148,4 +148,3 @@ A level should be considered valid if:
 - Target elements exist in the element registry.
 
 Validation should run in tests once the level catalog exists.
-

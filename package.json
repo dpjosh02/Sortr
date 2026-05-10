@@ -1,0 +1,43 @@
+{
+  "name": "sortr",
+  "version": "1.0.0",
+  "description": "A browser-based falling-sand puzzle game about sorting interacting pixel particles.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run lint && npm run format:check && npm run typecheck && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpjosh02/Sortr.git"
+  },
+  "keywords": [
+    "falling-sand",
+    "puzzle",
+    "canvas",
+    "typescript"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/dpjosh02/Sortr/issues"
+  },
+  "homepage": "https://github.com/dpjosh02/Sortr#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-import-x": "^4.16.2",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.11",
+    "vitest": "^4.1.5"
+  }
+}

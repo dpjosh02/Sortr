@@ -174,4 +174,3 @@ Before each playable snapshot:
 - The game runs in browser.
 - The feature is explained in plain language.
 - User is prompted to test before the next snapshot.
-
