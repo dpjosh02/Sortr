@@ -89,15 +89,21 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
         const y = bucket.rect.y * options.cellSize;
         const width = bucket.rect.width * options.cellSize;
         const height = bucket.rect.height * options.cellSize;
+        const wall = Math.max(1, options.cellSize);
 
         context.fillStyle = getBucketFillColor(bucket.target);
-        context.globalAlpha = 0.25;
+        context.globalAlpha = 0.5;
         context.fillRect(x, y + height * (1 - fillRatio), width, height * fillRatio);
         context.globalAlpha = 1;
 
         context.strokeStyle = bucket.accepted >= bucket.required ? "#2f6f45" : "#111111";
-        context.lineWidth = Math.max(1, options.cellSize);
-        context.strokeRect(x, y, width, height);
+        context.lineWidth = wall;
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(x, y + height);
+        context.lineTo(x + width, y + height);
+        context.lineTo(x + width, y);
+        context.stroke();
 
         context.fillStyle = getBucketFillColor(bucket.target);
         context.fillRect(x, y - options.cellSize * 2, width, options.cellSize);

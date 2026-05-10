@@ -18,7 +18,7 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       buckets: [
         {
           id: "water-bucket",
-          intake: "full-rect",
+          intake: "top",
           rect: {
             height: 24,
             width: 28,
@@ -55,7 +55,7 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       buckets: [
         {
           id: "sand-bucket",
-          intake: "full-rect",
+          intake: "top",
           rect: {
             height: 24,
             width: 30,

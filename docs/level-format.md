@@ -62,7 +62,7 @@ type BucketDefinition = {
 };
 ```
 
-MVP buckets only accept pure matching elements. Wrong elements do not count.
+MVP buckets only accept pure matching elements. Wrong elements do not count. Buckets behave as open-top containers: their left, right, and bottom borders block material, and only the top opening accepts material.
 
 ## Obstacles
 

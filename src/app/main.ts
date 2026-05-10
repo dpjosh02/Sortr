@@ -104,8 +104,8 @@ function render(): void {
 }
 
 const loop = createGameLoop({
-  maxStepsPerFrame: 4,
-  stepMs: 1000 / 60,
+  maxStepsPerFrame: 2,
+  stepMs: 1000 / 36,
   update: () => {
     world.step();
     render();

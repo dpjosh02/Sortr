@@ -415,37 +415,38 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe(-1);
   });
 
-  it("accepts matching bucket elements and completes the world", () => {
+  it("accepts matching bucket elements through the open top and stores settled fill", () => {
     const world = createWorld({
       buckets: [
         {
           id: "sand-goal",
-          intake: "full-rect",
+          intake: "top",
           rect: {
-            height: 1,
-            width: 2,
+            height: 3,
+            width: 4,
             x: 1,
-            y: 3,
+            y: 2,
           },
           required: 2,
           target: "sand",
         },
       ],
       emitters: [],
-      height: 4,
+      height: 5,
       seed: 1,
-      width: 4,
+      width: 6,
     });
 
-    world.setCell(1, 3, "sand");
-    world.setCell(2, 3, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(3, 2, "sand");
     world.step();
 
     const snapshot = world.snapshot();
     expect(snapshot.buckets[0]?.accepted).toBe(2);
+    expect(snapshot.buckets[0]?.settled).toBe(2);
     expect(snapshot.isComplete).toBe(true);
-    expect(world.getCell(1, 3)).toBe(EMPTY_CELL);
-    expect(world.getCell(2, 3)).toBe(EMPTY_CELL);
+    expect(world.getCell(2, 2)).toBe(EMPTY_CELL);
+    expect(world.getCell(3, 2)).toBe(EMPTY_CELL);
   });
 
   it("rejects wrong bucket elements without counting them", () => {
@@ -453,11 +454,11 @@ describe("createWorld", () => {
       buckets: [
         {
           id: "sand-goal",
-          intake: "full-rect",
+          intake: "top",
           rect: {
-            height: 1,
-            width: 1,
-            x: 1,
+            height: 2,
+            width: 3,
+            x: 0,
             y: 2,
           },
           required: 1,
@@ -483,11 +484,11 @@ describe("createWorld", () => {
       buckets: [
         {
           id: "water-goal",
-          intake: "full-rect",
+          intake: "top",
           rect: {
-            height: 1,
-            width: 2,
-            x: 1,
+            height: 2,
+            width: 4,
+            x: 0,
             y: 2,
           },
           required: 2,
@@ -507,6 +508,37 @@ describe("createWorld", () => {
     expect(world.snapshot().buckets[0]?.accepted).toBeCloseTo(2);
     expect(world.snapshot().isComplete).toBe(true);
     expect(totalWater(world)).toBeCloseTo(0);
+  });
+
+  it("blocks materials from entering bucket sides and bottom", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "sand-goal",
+          intake: "top",
+          rect: {
+            height: 4,
+            width: 4,
+            x: 1,
+            y: 1,
+          },
+          required: 1,
+          target: "sand",
+        },
+      ],
+      emitters: [],
+      height: 6,
+      seed: 1,
+      width: 6,
+    });
+
+    world.setCell(0, 2, "sand");
+    world.setCell(2, 5, "sand");
+    world.step();
+
+    expect(world.getCell(1, 2)).not.toBe("sand");
+    expect(world.getCell(2, 4)).not.toBe("sand");
+    expect(world.snapshot().buckets[0]?.accepted).toBe(0);
   });
 
   it("lets sandbox brushes add elements without replacing existing solids", () => {

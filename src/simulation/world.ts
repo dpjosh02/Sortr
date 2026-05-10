@@ -56,6 +56,7 @@ export interface BucketSnapshot {
   readonly target: ElementType;
   readonly required: number;
   readonly accepted: number;
+  readonly settled: number;
   readonly rect: GridRect;
   readonly intake: "full-rect" | "top";
 }
@@ -87,6 +88,7 @@ interface MutableWorldState {
 interface BucketState {
   readonly definition: BucketDefinition;
   accepted: number;
+  settled: number;
 }
 
 const MIN_WATER = 0.01;
@@ -231,6 +233,7 @@ function createBucketState(definition: BucketDefinition): BucketState {
   return {
     accepted: 0,
     definition,
+    settled: 0,
   };
 }
 
@@ -365,6 +368,10 @@ function tryMoveToFirstAvailableCell(
     const targetWater = getWaterAmount(state, candidate.x, candidate.y);
 
     if (isDiagonalCornerBlocked(state, fromX, fromY, candidate.x, candidate.y)) {
+      continue;
+    }
+
+    if (isBucketWallCell(state, candidate.x, candidate.y)) {
       continue;
     }
 
@@ -606,6 +613,7 @@ function acceptBucketCell(
     if (accepted > MIN_WATER) {
       state.water[index] = (state.water[index] ?? 0) - accepted;
       bucket.accepted += accepted;
+      bucket.settled += accepted;
     }
 
     return;
@@ -614,16 +622,22 @@ function acceptBucketCell(
   if (state.cells[index] === bucket.definition.target) {
     state.cells[index] = EMPTY_CELL;
     bucket.accepted += 1;
+    bucket.settled += 1;
   }
 }
 
 function getBucketIntakeCells(bucket: BucketDefinition): GridPoint[] {
   const cells: GridPoint[] = [];
-  const startY = bucket.intake === "top" ? bucket.rect.y : bucket.rect.y;
+  const startY = bucket.rect.y;
   const endY = bucket.intake === "top" ? bucket.rect.y : bucket.rect.y + bucket.rect.height - 1;
+  const startX = bucket.intake === "top" ? bucket.rect.x + 1 : bucket.rect.x;
+  const endX =
+    bucket.intake === "top"
+      ? bucket.rect.x + bucket.rect.width - 2
+      : bucket.rect.x + bucket.rect.width - 1;
 
   for (let y = startY; y <= endY; y += 1) {
-    for (let x = bucket.rect.x; x < bucket.rect.x + bucket.rect.width; x += 1) {
+    for (let x = startX; x <= endX; x += 1) {
       cells.push({ x, y });
     }
   }
@@ -638,6 +652,7 @@ function createBucketSnapshots(buckets: readonly BucketState[]): BucketSnapshot[
     intake: bucket.definition.intake,
     rect: bucket.definition.rect,
     required: bucket.definition.required,
+    settled: bucket.settled,
     target: bucket.definition.target,
   }));
 }
@@ -810,7 +825,29 @@ function canContainWater(state: MutableWorldState, x: number, y: number): boolea
     return false;
   }
 
-  return isEmpty(state.cells[toIndex(state, x, y)] ?? EMPTY_CELL);
+  return isEmpty(state.cells[toIndex(state, x, y)] ?? EMPTY_CELL) && !isBucketWallCell(state, x, y);
+}
+
+function isBucketWallCell(state: MutableWorldState, x: number, y: number): boolean {
+  for (const bucket of state.buckets) {
+    if (isBucketDefinitionWallCell(bucket.definition, x, y)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isBucketDefinitionWallCell(bucket: BucketDefinition, x: number, y: number): boolean {
+  const { rect } = bucket;
+  const insideX = x >= rect.x && x < rect.x + rect.width;
+  const insideY = y >= rect.y && y < rect.y + rect.height;
+
+  if (!insideX || !insideY) {
+    return false;
+  }
+
+  return x === rect.x || x === rect.x + rect.width - 1 || y === rect.y + rect.height - 1;
 }
 
 function getWaterAmount(state: MutableWorldState, x: number, y: number): number {

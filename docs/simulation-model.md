@@ -233,6 +233,7 @@ Buckets track:
 - Target element.
 - Required count.
 - Current accepted count.
+- Current settled visual fill count.
 - Intake cells.
 - Completion state.
 
@@ -241,6 +242,8 @@ For MVP:
 - Only matching pure elements count.
 - Wrong elements do not count.
 - Matching elements are removed from the simulation as accepted bucket fill.
+- Buckets are open-top containers. Left, right, and bottom bucket borders block material; only the top opening accepts material.
+- Accepted material is rendered as settled fill inside the bucket so progress looks physically contained.
 - Filled buckets can either continue accepting matching elements or become blocked after completion. This should be tuned during playtesting.
 
 Initial recommendation:
