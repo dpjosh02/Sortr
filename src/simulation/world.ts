@@ -251,7 +251,11 @@ function tryMoveToFirstAvailableCell(
       return;
     }
 
-    if (!isElement(targetCell) || !canDisplace(movingCell, targetCell)) {
+    if (
+      moved[targetIndex] === true ||
+      !isElement(targetCell) ||
+      !canDisplace(movingCell, targetCell)
+    ) {
       continue;
     }
 

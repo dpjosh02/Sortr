@@ -145,6 +145,30 @@ describe("createWorld", () => {
     expect(world.getCell(1, 1)).toBe("water");
   });
 
+  it("does not chain-displace the same water particle within one tick", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.setCell(2, 0, "sand");
+    world.setCell(3, 0, "sand");
+    world.setCell(2, 1, "water");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.setCell(3, 2, "sand");
+    world.setCell(4, 2, "sand");
+    world.step();
+
+    expect([world.getCell(1, 1), world.getCell(3, 1)]).toContain("water");
+    expect(world.getCell(0, 1)).not.toBe("water");
+    expect(world.getCell(4, 1)).not.toBe("water");
+  });
+
   it("does not let water displace denser sand", () => {
     const world = createWorld({
       emitters: [],

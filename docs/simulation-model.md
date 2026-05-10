@@ -76,7 +76,7 @@ MVP phases:
 
 Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by moving into that liquid's cell and pushing the liquid into a lateral escape cell on the same row.
 
-Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids must move sideways, not into the moving particle's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed only when the water has a valid lateral escape cell.
+Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids must move sideways, not into the moving particle's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed only when the water has a valid lateral escape cell. A liquid particle that has already been displaced during the current tick cannot be displaced again until the next tick; this prevents multiple sand particles from chain-pushing one water particle through a pile in a single frame.
 
 Diagonal particle movement must respect line corners. If two player-drawn line cells touch diagonally, particles cannot pass between their shared corner.
 
