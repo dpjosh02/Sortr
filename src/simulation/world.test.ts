@@ -415,6 +415,100 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe(-1);
   });
 
+  it("accepts matching bucket elements and completes the world", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "sand-goal",
+          intake: "full-rect",
+          rect: {
+            height: 1,
+            width: 2,
+            x: 1,
+            y: 3,
+          },
+          required: 2,
+          target: "sand",
+        },
+      ],
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 3, "sand");
+    world.setCell(2, 3, "sand");
+    world.step();
+
+    const snapshot = world.snapshot();
+    expect(snapshot.buckets[0]?.accepted).toBe(2);
+    expect(snapshot.isComplete).toBe(true);
+    expect(world.getCell(1, 3)).toBe(EMPTY_CELL);
+    expect(world.getCell(2, 3)).toBe(EMPTY_CELL);
+  });
+
+  it("rejects wrong bucket elements without counting them", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "sand-goal",
+          intake: "full-rect",
+          rect: {
+            height: 1,
+            width: 1,
+            x: 1,
+            y: 2,
+          },
+          required: 1,
+          target: "sand",
+        },
+      ],
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 2, "water");
+    world.step();
+
+    expect(world.snapshot().buckets[0]?.accepted).toBe(0);
+    expect(world.snapshot().isComplete).toBe(false);
+    expect(world.getCell(1, 2)).toBe("water");
+  });
+
+  it("counts water bucket intake by conserved volume", () => {
+    const world = createWorld({
+      buckets: [
+        {
+          id: "water-goal",
+          intake: "full-rect",
+          rect: {
+            height: 1,
+            width: 2,
+            x: 1,
+            y: 2,
+          },
+          required: 2,
+          target: "water",
+        },
+      ],
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 2, "water");
+    world.setCell(2, 2, "water");
+    world.step();
+
+    expect(world.snapshot().buckets[0]?.accepted).toBeCloseTo(2);
+    expect(world.snapshot().isComplete).toBe(true);
+    expect(totalWater(world)).toBeCloseTo(0);
+  });
+
   it("lets sandbox brushes add elements without replacing existing solids", () => {
     const world = createWorld({
       emitters: [],

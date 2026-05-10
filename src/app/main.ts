@@ -3,7 +3,7 @@ import "./styles.css";
 import { createGameLoop } from "../game/loop";
 import { createActionMap } from "../input/actionMap";
 import { getCanvasGridPoint } from "../input/pointer";
-import { getInitialLevel } from "../levels/levelCatalog";
+import { getInitialLevel, getLevelByIndex, getNextLevelIndex } from "../levels/levelCatalog";
 import { createCanvasRenderer } from "../rendering/canvasRenderer";
 import type { ElementType } from "../simulation/elements";
 import { getLineCells, type GridPoint } from "../simulation/lines";
@@ -15,7 +15,8 @@ if (app === null) {
   throw new Error("Missing #app mount node.");
 }
 
-const level = getInitialLevel();
+let currentLevelIndex = 0;
+let level = getInitialLevel();
 let world = createWorld(level.world);
 
 const canvas = document.createElement("canvas");
@@ -37,6 +38,11 @@ resetButton.textContent = "Reset";
 const debugButton = document.createElement("button");
 debugButton.type = "button";
 debugButton.textContent = "Debug";
+
+const nextButton = document.createElement("button");
+nextButton.type = "button";
+nextButton.textContent = "Next";
+nextButton.hidden = true;
 
 type BrushMode = "line" | "sand" | "water";
 
@@ -64,7 +70,7 @@ status.className = "status-line";
 
 const toolbar = document.createElement("div");
 toolbar.className = "toolbar";
-toolbar.append(brushPalette, resetButton, debugButton);
+toolbar.append(brushPalette, resetButton, nextButton, debugButton);
 
 const header = document.createElement("header");
 header.className = "app-header";
@@ -89,9 +95,12 @@ function render(): void {
     background: level.background,
     cellSize: level.cellSize,
   });
+  nextButton.hidden = !snapshot.isComplete || getNextLevelIndex(currentLevelIndex) === null;
   status.textContent = debugEnabled
-    ? `${level.title} | tick ${String(snapshot.tick)} | ${formatParticleCounts(snapshot.particleCounts)}`
-    : `${level.title} | ${getBrushLabel(selectedBrush)} brush`;
+    ? `${level.title} | tick ${String(snapshot.tick)} | ${formatParticleCounts(snapshot.particleCounts)} | ${formatBucketProgress(snapshot.buckets)}`
+    : snapshot.isComplete
+      ? `${level.title} | complete`
+      : `${level.title} | ${getBrushLabel(selectedBrush)} brush | ${formatBucketProgress(snapshot.buckets)}`;
 }
 
 const loop = createGameLoop({
@@ -107,8 +116,15 @@ render();
 loop.start();
 
 resetButton.addEventListener("click", () => {
-  world = createWorld(level.world);
-  render();
+  loadLevel(currentLevelIndex);
+});
+
+nextButton.addEventListener("click", () => {
+  const nextIndex = getNextLevelIndex(currentLevelIndex);
+
+  if (nextIndex !== null) {
+    loadLevel(nextIndex);
+  }
 });
 
 debugButton.addEventListener("click", () => {
@@ -183,6 +199,34 @@ function formatParticleCounts(
   }
 
   return counts.map(({ count, element }) => `${element}: ${String(count)}`).join(" / ");
+}
+
+function formatBucketProgress(
+  buckets: readonly {
+    readonly accepted: number;
+    readonly required: number;
+    readonly target: string;
+  }[],
+): string {
+  if (buckets.length === 0) {
+    return "no buckets";
+  }
+
+  return buckets
+    .map(
+      ({ accepted, required, target }) =>
+        `${target}: ${String(Math.floor(accepted))}/${String(required)}`,
+    )
+    .join(" / ");
+}
+
+function loadLevel(index: number): void {
+  currentLevelIndex = index;
+  level = getLevelByIndex(index);
+  world = createWorld(level.world);
+  canvas.width = level.world.width * level.cellSize;
+  canvas.height = level.world.height * level.cellSize;
+  render();
 }
 
 function getDrawPoint(event: PointerEvent): GridPoint {

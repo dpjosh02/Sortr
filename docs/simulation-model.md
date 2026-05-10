@@ -30,11 +30,12 @@ Some systems may keep metadata outside the cell grid, such as bucket fill counts
 Each tick should:
 
 1. Spawn particles from emitters according to emitter rules.
-2. Process reactions between neighboring particles.
-3. Move particles according to element behavior.
-4. Process bucket intake.
-5. Update bucket completion state.
-6. Publish a read-only state view for rendering.
+2. Process bucket intake for particles already inside bucket regions.
+3. Process reactions between neighboring particles.
+4. Move particles according to element behavior.
+5. Process bucket intake for particles that just entered bucket regions.
+6. Update bucket completion state.
+7. Publish a read-only state view for rendering.
 
 The exact ordering can be revised if tests prove another order gives better gameplay, but the order must remain explicit and documented.
 
@@ -239,6 +240,7 @@ For MVP:
 
 - Only matching pure elements count.
 - Wrong elements do not count.
+- Matching elements are removed from the simulation as accepted bucket fill.
 - Filled buckets can either continue accepting matching elements or become blocked after completion. This should be tuned during playtesting.
 
 Initial recommendation:

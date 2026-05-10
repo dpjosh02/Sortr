@@ -17,6 +17,22 @@ export interface WorldDefinition {
   readonly height: number;
   readonly seed: number;
   readonly emitters: readonly EmitterDefinition[];
+  readonly buckets?: readonly BucketDefinition[];
+}
+
+export interface GridRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface BucketDefinition {
+  readonly id: string;
+  readonly target: ElementType;
+  readonly required: number;
+  readonly rect: GridRect;
+  readonly intake: "full-rect" | "top";
 }
 
 export interface ParticleCount {
@@ -30,7 +46,18 @@ export interface WorldSnapshot {
   readonly tick: number;
   readonly cells: readonly CellValue[];
   readonly water: readonly number[];
+  readonly buckets: readonly BucketSnapshot[];
+  readonly isComplete: boolean;
   readonly particleCounts: readonly ParticleCount[];
+}
+
+export interface BucketSnapshot {
+  readonly id: string;
+  readonly target: ElementType;
+  readonly required: number;
+  readonly accepted: number;
+  readonly rect: GridRect;
+  readonly intake: "full-rect" | "top";
 }
 
 export interface World {
@@ -53,7 +80,13 @@ interface MutableWorldState {
   readonly water: number[];
   readonly random: SeededRandom;
   readonly emitters: EmitterState[];
+  readonly buckets: BucketState[];
   tick: number;
+}
+
+interface BucketState {
+  readonly definition: BucketDefinition;
+  accepted: number;
 }
 
 const MIN_WATER = 0.01;
@@ -71,6 +104,7 @@ export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("height", definition.height);
 
   const state: MutableWorldState = {
+    buckets: definition.buckets?.map(createBucketState) ?? [],
     cells: Array<CellValue>(definition.width * definition.height).fill(EMPTY_CELL),
     emitters: definition.emitters.map(createEmitterState),
     height: definition.height,
@@ -170,7 +204,9 @@ export function createWorld(definition: WorldDefinition): World {
     snapshot(): WorldSnapshot {
       return {
         cells: [...state.cells],
+        buckets: createBucketSnapshots(state.buckets),
         height: state.height,
+        isComplete: isWorldComplete(state),
         particleCounts: countParticles(state),
         tick: state.tick,
         water: [...state.water],
@@ -179,9 +215,22 @@ export function createWorld(definition: WorldDefinition): World {
     },
     step(): void {
       spawnFromEmitters(state);
+      processBuckets(state);
       moveParticles(state);
+      processBuckets(state);
       state.tick += 1;
     },
+  };
+}
+
+function createBucketState(definition: BucketDefinition): BucketState {
+  assertPositiveInteger("bucket required", definition.required);
+  assertPositiveInteger("bucket width", definition.rect.width);
+  assertPositiveInteger("bucket height", definition.rect.height);
+
+  return {
+    accepted: 0,
+    definition,
   };
 }
 
@@ -516,6 +565,88 @@ function flowWaterCell(state: MutableWorldState, x: number, y: number): void {
       transferWater(state, x, y, x, aboveY, amount);
     }
   }
+}
+
+function processBuckets(state: MutableWorldState): void {
+  for (const bucket of state.buckets) {
+    if (bucket.accepted >= bucket.definition.required) {
+      continue;
+    }
+
+    for (const point of getBucketIntakeCells(bucket.definition)) {
+      if (!isInside(state, point.x, point.y)) {
+        continue;
+      }
+
+      acceptBucketCell(state, bucket, point.x, point.y);
+
+      if (bucket.accepted >= bucket.definition.required) {
+        break;
+      }
+    }
+  }
+}
+
+function acceptBucketCell(
+  state: MutableWorldState,
+  bucket: BucketState,
+  x: number,
+  y: number,
+): void {
+  const index = toIndex(state, x, y);
+  const remaining = bucket.definition.required - bucket.accepted;
+
+  if (remaining <= 0) {
+    return;
+  }
+
+  if (bucket.definition.target === "water") {
+    const accepted = Math.min(remaining, state.water[index] ?? 0);
+
+    if (accepted > MIN_WATER) {
+      state.water[index] = (state.water[index] ?? 0) - accepted;
+      bucket.accepted += accepted;
+    }
+
+    return;
+  }
+
+  if (state.cells[index] === bucket.definition.target) {
+    state.cells[index] = EMPTY_CELL;
+    bucket.accepted += 1;
+  }
+}
+
+function getBucketIntakeCells(bucket: BucketDefinition): GridPoint[] {
+  const cells: GridPoint[] = [];
+  const startY = bucket.intake === "top" ? bucket.rect.y : bucket.rect.y;
+  const endY = bucket.intake === "top" ? bucket.rect.y : bucket.rect.y + bucket.rect.height - 1;
+
+  for (let y = startY; y <= endY; y += 1) {
+    for (let x = bucket.rect.x; x < bucket.rect.x + bucket.rect.width; x += 1) {
+      cells.push({ x, y });
+    }
+  }
+
+  return cells;
+}
+
+function createBucketSnapshots(buckets: readonly BucketState[]): BucketSnapshot[] {
+  return buckets.map((bucket) => ({
+    accepted: bucket.accepted,
+    id: bucket.definition.id,
+    intake: bucket.definition.intake,
+    rect: bucket.definition.rect,
+    required: bucket.definition.required,
+    target: bucket.definition.target,
+  }));
+}
+
+function isWorldComplete(state: MutableWorldState): boolean {
+  return (
+    state.buckets.length > 0 &&
+    state.buckets.every((bucket) => bucket.accepted >= bucket.definition.required)
+  );
 }
 
 function displaceWaterForSolid(
