@@ -1,10 +1,11 @@
 export const EMPTY_CELL = 0;
+export const DRAWN_LINE_CELL = -1;
 
 export const ELEMENTS = ["water", "sand", "fire", "steam"] as const;
 
 export type ElementType = (typeof ELEMENTS)[number];
 
-export type CellValue = typeof EMPTY_CELL | ElementType;
+export type CellValue = typeof DRAWN_LINE_CELL | typeof EMPTY_CELL | ElementType;
 
 export type ElementPhase = "energy" | "gas" | "liquid" | "powder";
 
@@ -40,11 +41,15 @@ export const ELEMENT_PALETTE: Readonly<Record<ElementType, readonly string[]>> =
 };
 
 export function isElement(value: CellValue): value is ElementType {
-  return value !== EMPTY_CELL;
+  return typeof value === "string";
 }
 
 export function isEmpty(value: CellValue): value is typeof EMPTY_CELL {
   return value === EMPTY_CELL;
+}
+
+export function isDrawnLine(value: CellValue): value is typeof DRAWN_LINE_CELL {
+  return value === DRAWN_LINE_CELL;
 }
 
 export function canDisplace(moving: ElementType, target: ElementType): boolean {

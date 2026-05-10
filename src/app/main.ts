@@ -2,8 +2,10 @@ import "./styles.css";
 
 import { createGameLoop } from "../game/loop";
 import { createActionMap } from "../input/actionMap";
+import { getCanvasGridPoint } from "../input/pointer";
 import { getInitialLevel } from "../levels/levelCatalog";
 import { createCanvasRenderer } from "../rendering/canvasRenderer";
+import type { GridPoint } from "../simulation/lines";
 import { createWorld } from "../simulation/world";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -20,6 +22,9 @@ canvas.width = level.world.width * level.cellSize;
 canvas.height = level.world.height * level.cellSize;
 canvas.className = "playfield";
 canvas.setAttribute("aria-label", "Sortr particle playfield");
+canvas.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+});
 
 const title = document.createElement("h1");
 title.textContent = "Sortr";
@@ -52,6 +57,8 @@ app.append(header, shell);
 const renderer = createCanvasRenderer(canvas);
 const actions = createActionMap();
 let debugEnabled = false;
+let activePointerId: number | null = null;
+let previousDrawPoint: GridPoint | null = null;
 
 function render(): void {
   const snapshot = world.snapshot();
@@ -87,6 +94,37 @@ debugButton.addEventListener("click", () => {
   render();
 });
 
+canvas.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) {
+    return;
+  }
+
+  activePointerId = event.pointerId;
+  canvas.setPointerCapture(event.pointerId);
+  previousDrawPoint = getDrawPoint(event);
+  world.addLineCell(previousDrawPoint.x, previousDrawPoint.y);
+  render();
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (activePointerId !== event.pointerId || previousDrawPoint === null) {
+    return;
+  }
+
+  const nextPoint = getDrawPoint(event);
+  world.addLineSegment(previousDrawPoint, nextPoint);
+  previousDrawPoint = nextPoint;
+  render();
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  endDraw(event.pointerId);
+});
+
+canvas.addEventListener("pointercancel", (event) => {
+  endDraw(event.pointerId);
+});
+
 window.addEventListener("keydown", (event) => {
   const action = actions.keyboard[event.key];
 
@@ -107,4 +145,27 @@ function formatParticleCounts(
   }
 
   return counts.map(({ count, element }) => `${element}: ${String(count)}`).join(" / ");
+}
+
+function getDrawPoint(event: PointerEvent): GridPoint {
+  return getCanvasGridPoint({
+    canvas,
+    clientX: event.clientX,
+    clientY: event.clientY,
+    gridHeight: world.height,
+    gridWidth: world.width,
+  });
+}
+
+function endDraw(pointerId: number): void {
+  if (activePointerId !== pointerId) {
+    return;
+  }
+
+  if (canvas.hasPointerCapture(pointerId)) {
+    canvas.releasePointerCapture(pointerId);
+  }
+
+  activePointerId = null;
+  previousDrawPoint = null;
 }

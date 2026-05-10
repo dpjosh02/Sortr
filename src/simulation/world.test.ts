@@ -168,4 +168,77 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe("sand");
     expect(world.getCell(1, 1)).toBe("sand");
   });
+
+  it("blocks water with drawn line cells", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "water");
+    world.addLineCell(0, 0);
+    world.addLineCell(2, 0);
+    world.addLineSegment({ x: 0, y: 1 }, { x: 2, y: 1 });
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("water");
+  });
+
+  it("blocks sand with drawn line cells", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.addLineSegment({ x: 0, y: 1 }, { x: 2, y: 1 });
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("sand");
+  });
+
+  it("does not spawn particles into drawn line cells", () => {
+    const world = createWorld({
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: {
+            end: 1,
+            start: 1,
+          },
+          ratePerTick: 1,
+        },
+      ],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.addLineCell(1, 0);
+    world.step();
+
+    expect(world.snapshot().particleCounts).toEqual([]);
+    expect(world.getCell(1, 0)).toBe(-1);
+  });
+
+  it("clears drawn lines when the world is recreated for reset", () => {
+    const definition: WorldDefinition = {
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    };
+    const world = createWorld(definition);
+
+    world.addLineCell(1, 1);
+
+    expect(world.getCell(1, 1)).toBe(-1);
+    expect(createWorld(definition).getCell(1, 1)).toBe(EMPTY_CELL);
+  });
 });

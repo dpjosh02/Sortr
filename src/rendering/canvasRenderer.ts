@@ -1,4 +1,10 @@
-import { EMPTY_CELL, ELEMENT_PALETTE, type CellValue, isElement } from "../simulation/elements";
+import {
+  EMPTY_CELL,
+  ELEMENT_PALETTE,
+  type CellValue,
+  isDrawnLine,
+  isElement,
+} from "../simulation/elements";
 import type { WorldSnapshot } from "../simulation/world";
 
 export interface CanvasRenderer {
@@ -38,6 +44,17 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       for (let y = 0; y < snapshot.height; y += 1) {
         for (let x = 0; x < snapshot.width; x += 1) {
           const cell = snapshot.cells[y * snapshot.width + x] ?? EMPTY_CELL;
+
+          if (isDrawnLine(cell)) {
+            context.fillStyle = "#111111";
+            context.fillRect(
+              x * options.cellSize,
+              y * options.cellSize,
+              options.cellSize,
+              options.cellSize,
+            );
+            continue;
+          }
 
           if (!isElement(cell)) {
             continue;

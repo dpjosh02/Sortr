@@ -1,4 +1,5 @@
 import {
+  DRAWN_LINE_CELL,
   EMPTY_CELL,
   canDisplace,
   type CellValue,
@@ -7,6 +8,7 @@ import {
   isEmpty,
 } from "./elements";
 import { createEmitterState, type EmitterDefinition, type EmitterState } from "./emitters";
+import { getLineCells, type GridPoint } from "./lines";
 import { createSeededRandom, type SeededRandom } from "./random";
 
 export interface WorldDefinition {
@@ -33,6 +35,8 @@ export interface World {
   readonly width: number;
   readonly height: number;
   readonly tick: number;
+  addLineCell(x: number, y: number): void;
+  addLineSegment(start: GridPoint, end: GridPoint): void;
   getCell(x: number, y: number): CellValue;
   setCell(x: number, y: number, value: CellValue): void;
   step(): void;
@@ -70,6 +74,20 @@ export function createWorld(definition: WorldDefinition): World {
     },
     get width(): number {
       return state.width;
+    },
+    addLineCell(x: number, y: number): void {
+      if (!isInside(state, x, y)) {
+        return;
+      }
+
+      state.cells[toIndex(state, x, y)] = DRAWN_LINE_CELL;
+    },
+    addLineSegment(start: GridPoint, end: GridPoint): void {
+      for (const cell of getLineCells(start, end)) {
+        if (isInside(state, cell.x, cell.y)) {
+          state.cells[toIndex(state, cell.x, cell.y)] = DRAWN_LINE_CELL;
+        }
+      }
     },
     getCell(x: number, y: number): CellValue {
       if (!isInside(state, x, y)) {
@@ -244,7 +262,7 @@ function countParticles(cells: readonly CellValue[]): ParticleCount[] {
   const counts = new Map<ElementType, number>();
 
   for (const cell of cells) {
-    if (isEmpty(cell)) {
+    if (!isElement(cell)) {
       continue;
     }
 

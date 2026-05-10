@@ -92,6 +92,7 @@ Exit criteria:
 User test:
 
 - Confirm drawing feels direct and lines match pointer paths.
+- Confirm particles collide with drawn lines and route around them.
 
 ## Snapshot 4: Buckets And Level Completion
 
