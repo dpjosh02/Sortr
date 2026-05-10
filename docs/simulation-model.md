@@ -241,9 +241,9 @@ For MVP:
 
 - Only matching pure elements count.
 - Wrong elements do not count.
-- Matching elements are removed from the simulation as accepted bucket fill.
+- Matching elements remain in the simulation and settle inside the bucket volume.
 - Buckets are open-top containers. Left, right, and bottom bucket borders block material; only the top opening accepts material.
-- Accepted material is rendered as settled fill inside the bucket so progress looks physically contained.
+- Fill progress is measured from the matching material currently inside the bucket interior. Water uses a small completion tolerance because liquid volume is fractional.
 - Filled buckets can either continue accepting matching elements or become blocked after completion. This should be tuned during playtesting.
 
 Initial recommendation:

@@ -576,65 +576,42 @@ function flowWaterCell(state: MutableWorldState, x: number, y: number): void {
 
 function processBuckets(state: MutableWorldState): void {
   for (const bucket of state.buckets) {
-    if (bucket.accepted >= bucket.definition.required) {
-      continue;
-    }
+    let accepted = 0;
 
-    for (const point of getBucketIntakeCells(bucket.definition)) {
+    for (const point of getBucketInteriorCells(bucket.definition)) {
       if (!isInside(state, point.x, point.y)) {
         continue;
       }
 
-      acceptBucketCell(state, bucket, point.x, point.y);
-
-      if (bucket.accepted >= bucket.definition.required) {
-        break;
-      }
+      accepted += getBucketCellFill(state, bucket.definition.target, point.x, point.y);
     }
+
+    bucket.accepted = Math.min(bucket.definition.required, accepted);
+    bucket.settled = accepted;
   }
 }
 
-function acceptBucketCell(
+function getBucketCellFill(
   state: MutableWorldState,
-  bucket: BucketState,
+  target: ElementType,
   x: number,
   y: number,
-): void {
+): number {
   const index = toIndex(state, x, y);
-  const remaining = bucket.definition.required - bucket.accepted;
 
-  if (remaining <= 0) {
-    return;
+  if (target === "water") {
+    return state.water[index] ?? 0;
   }
 
-  if (bucket.definition.target === "water") {
-    const accepted = Math.min(remaining, state.water[index] ?? 0);
-
-    if (accepted > MIN_WATER) {
-      state.water[index] = (state.water[index] ?? 0) - accepted;
-      bucket.accepted += accepted;
-      bucket.settled += accepted;
-    }
-
-    return;
-  }
-
-  if (state.cells[index] === bucket.definition.target) {
-    state.cells[index] = EMPTY_CELL;
-    bucket.accepted += 1;
-    bucket.settled += 1;
-  }
+  return state.cells[index] === target ? 1 : 0;
 }
 
-function getBucketIntakeCells(bucket: BucketDefinition): GridPoint[] {
+function getBucketInteriorCells(bucket: BucketDefinition): GridPoint[] {
   const cells: GridPoint[] = [];
   const startY = bucket.rect.y;
-  const endY = bucket.intake === "top" ? bucket.rect.y : bucket.rect.y + bucket.rect.height - 1;
-  const startX = bucket.intake === "top" ? bucket.rect.x + 1 : bucket.rect.x;
-  const endX =
-    bucket.intake === "top"
-      ? bucket.rect.x + bucket.rect.width - 2
-      : bucket.rect.x + bucket.rect.width - 1;
+  const endY = bucket.rect.y + bucket.rect.height - 2;
+  const startX = bucket.rect.x + 1;
+  const endX = bucket.rect.x + bucket.rect.width - 2;
 
   for (let y = startY; y <= endY; y += 1) {
     for (let x = startX; x <= endX; x += 1) {
@@ -660,7 +637,7 @@ function createBucketSnapshots(buckets: readonly BucketState[]): BucketSnapshot[
 function isWorldComplete(state: MutableWorldState): boolean {
   return (
     state.buckets.length > 0 &&
-    state.buckets.every((bucket) => bucket.accepted >= bucket.definition.required)
+    state.buckets.every((bucket) => bucket.accepted >= bucket.definition.required - 0.1)
   );
 }
 

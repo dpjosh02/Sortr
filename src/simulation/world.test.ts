@@ -415,7 +415,7 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe(-1);
   });
 
-  it("accepts matching bucket elements through the open top and stores settled fill", () => {
+  it("counts matching material that physically settles inside a bucket", () => {
     const world = createWorld({
       buckets: [
         {
@@ -439,14 +439,18 @@ describe("createWorld", () => {
 
     world.setCell(2, 2, "sand");
     world.setCell(3, 2, "sand");
-    world.step();
+
+    for (let index = 0; index < 2; index += 1) {
+      world.step();
+    }
 
     const snapshot = world.snapshot();
     expect(snapshot.buckets[0]?.accepted).toBe(2);
     expect(snapshot.buckets[0]?.settled).toBe(2);
     expect(snapshot.isComplete).toBe(true);
-    expect(world.getCell(2, 2)).toBe(EMPTY_CELL);
-    expect(world.getCell(3, 2)).toBe(EMPTY_CELL);
+    expect(countElementCells(world, "sand")).toBe(2);
+    expect(world.getCell(2, 3)).toBe("sand");
+    expect(world.getCell(3, 3)).toBe("sand");
   });
 
   it("rejects wrong bucket elements without counting them", () => {
@@ -505,9 +509,9 @@ describe("createWorld", () => {
     world.setCell(2, 2, "water");
     world.step();
 
-    expect(world.snapshot().buckets[0]?.accepted).toBeCloseTo(2);
+    expect(world.snapshot().buckets[0]?.accepted).toBeGreaterThan(1.9);
     expect(world.snapshot().isComplete).toBe(true);
-    expect(totalWater(world)).toBeCloseTo(0);
+    expect(totalWater(world)).toBeCloseTo(2);
   });
 
   it("blocks materials from entering bucket sides and bottom", () => {
