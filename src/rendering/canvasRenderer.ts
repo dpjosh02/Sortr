@@ -84,17 +84,13 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       }
 
       for (const bucket of snapshot.buckets) {
-        const fillRatio = Math.min(1, bucket.accepted / bucket.required);
         const x = bucket.rect.x * options.cellSize;
         const y = bucket.rect.y * options.cellSize;
         const width = bucket.rect.width * options.cellSize;
         const height = bucket.rect.height * options.cellSize;
         const wall = Math.max(1, options.cellSize);
 
-        context.fillStyle = getBucketFillColor(bucket.target);
-        context.globalAlpha = 0.5;
-        context.fillRect(x, y + height * (1 - fillRatio), width, height * fillRatio);
-        context.globalAlpha = 1;
+        drawSettledBucketContents(context, bucket, options.cellSize);
 
         context.strokeStyle = bucket.accepted >= bucket.required ? "#2f6f45" : "#111111";
         context.lineWidth = wall;
@@ -110,6 +106,49 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       }
     },
   };
+}
+
+type BucketRenderSnapshot = WorldSnapshot["buckets"][number];
+
+function drawSettledBucketContents(
+  context: CanvasRenderingContext2D,
+  bucket: BucketRenderSnapshot,
+  cellSize: number,
+): void {
+  const innerX = bucket.rect.x + 1;
+  const innerY = bucket.rect.y + 1;
+  const innerWidth = Math.max(0, bucket.rect.width - 2);
+  const innerHeight = Math.max(0, bucket.rect.height - 2);
+
+  if (innerWidth === 0 || innerHeight === 0 || bucket.settled <= 0) {
+    return;
+  }
+
+  if (bucket.target === "water") {
+    const fillRatio = Math.min(1, bucket.settled / bucket.required);
+    context.fillStyle = getBucketFillColor(bucket.target);
+    context.fillRect(
+      innerX * cellSize,
+      (innerY + innerHeight * (1 - fillRatio)) * cellSize,
+      innerWidth * cellSize,
+      innerHeight * fillRatio * cellSize,
+    );
+    return;
+  }
+
+  const settledCells = Math.min(Math.floor(bucket.settled), innerWidth * innerHeight);
+
+  for (let index = 0; index < settledCells; index += 1) {
+    const row = Math.floor(index / innerWidth);
+    const rowCapacity = Math.max(1, innerWidth - row);
+    const column = index % rowCapacity;
+    const centeredOffset = Math.floor((innerWidth - rowCapacity) / 2);
+    const x = innerX + centeredOffset + column;
+    const y = innerY + innerHeight - 1 - row;
+
+    context.fillStyle = getParticleColor(bucket.target, x, y);
+    context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  }
 }
 
 function getBucketFillColor(element: keyof typeof ELEMENT_PALETTE): string {
