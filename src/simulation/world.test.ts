@@ -201,6 +201,44 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe("sand");
   });
 
+  it("blocks diagonal movement through touching corner line cells", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 2,
+      seed: 1,
+      width: 2,
+    });
+
+    world.setCell(0, 0, "sand");
+    world.addLineCell(0, 1);
+    world.addLineCell(1, 0);
+    world.step();
+
+    expect(world.getCell(0, 0)).toBe("sand");
+    expect(world.getCell(1, 1)).toBe(EMPTY_CELL);
+  });
+
+  it("does not let sand diagonally displace water uphill", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.setCell(0, 1, "sand");
+    world.setCell(1, 1, "sand");
+    world.setCell(2, 1, "water");
+    world.setCell(0, 2, "sand");
+    world.setCell(1, 2, "sand");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(1, 0)).toBe("sand");
+    expect(world.getCell(2, 1)).toBe("water");
+  });
+
   it("does not spawn particles into drawn line cells", () => {
     const world = createWorld({
       emitters: [

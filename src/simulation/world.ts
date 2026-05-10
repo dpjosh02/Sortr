@@ -4,6 +4,7 @@ import {
   canDisplace,
   type CellValue,
   type ElementType,
+  isDrawnLine,
   isElement,
   isEmpty,
 } from "./elements";
@@ -239,6 +240,10 @@ function tryMoveToFirstAvailableCell(
     const targetIndex = toIndex(state, candidate.x, candidate.y);
     const targetCell = state.cells[targetIndex] ?? EMPTY_CELL;
 
+    if (isDiagonalCornerBlocked(state, fromX, fromY, candidate.x, candidate.y)) {
+      continue;
+    }
+
     if (isEmpty(targetCell)) {
       state.cells[targetIndex] = movingCell;
       state.cells[fromIndex] = EMPTY_CELL;
@@ -246,7 +251,11 @@ function tryMoveToFirstAvailableCell(
       return;
     }
 
-    if (!isElement(targetCell) || !canDisplace(movingCell, targetCell)) {
+    if (
+      !isVerticalDownwardMove(fromX, fromY, candidate.x, candidate.y) ||
+      !isElement(targetCell) ||
+      !canDisplace(movingCell, targetCell)
+    ) {
       continue;
     }
 
@@ -256,6 +265,32 @@ function tryMoveToFirstAvailableCell(
     moved[targetIndex] = true;
     return;
   }
+}
+
+function isDiagonalCornerBlocked(
+  state: MutableWorldState,
+  fromX: number,
+  fromY: number,
+  targetX: number,
+  targetY: number,
+): boolean {
+  if (fromX === targetX || fromY === targetY) {
+    return false;
+  }
+
+  const horizontalCorner = getCellUnchecked(state, targetX, fromY);
+  const verticalCorner = getCellUnchecked(state, fromX, targetY);
+
+  return isDrawnLine(horizontalCorner) && isDrawnLine(verticalCorner);
+}
+
+function isVerticalDownwardMove(
+  fromX: number,
+  fromY: number,
+  targetX: number,
+  targetY: number,
+): boolean {
+  return fromX === targetX && targetY > fromY;
 }
 
 function countParticles(cells: readonly CellValue[]): ParticleCount[] {
@@ -291,6 +326,14 @@ function clampCell(
 
 function isInside(state: MutableWorldState, x: number, y: number): boolean {
   return x >= 0 && x < state.width && y >= 0 && y < state.height;
+}
+
+function getCellUnchecked(state: MutableWorldState, x: number, y: number): CellValue {
+  if (!isInside(state, x, y)) {
+    return EMPTY_CELL;
+  }
+
+  return state.cells[toIndex(state, x, y)] ?? EMPTY_CELL;
 }
 
 function toIndex(state: MutableWorldState, x: number, y: number): number {
