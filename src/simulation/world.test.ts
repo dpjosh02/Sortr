@@ -32,7 +32,7 @@ describe("createWorld", () => {
     }
 
     expect(first.snapshot().cells).toEqual(second.snapshot().cells);
-    expect(first.snapshot().particleCounts).toEqual([{ count: 4, element: "water" }]);
+    expect(totalWater(first)).toBeCloseTo(4);
   });
 
   it("moves water downward before spreading sideways", () => {
@@ -47,7 +47,8 @@ describe("createWorld", () => {
     world.step();
 
     expect(world.getCell(1, 0)).toBe(EMPTY_CELL);
-    expect(world.getCell(1, 1)).toBe("water");
+    expect(waterInRow(world, 0)).toBeCloseTo(0);
+    expect(waterBelowRow(world, 0)).toBeCloseTo(1);
   });
 
   it("lets water spread horizontally when lower cells are blocked", () => {
@@ -64,7 +65,7 @@ describe("createWorld", () => {
     world.setCell(3, 2, "sand");
     world.step();
 
-    expect(world.getCell(2, 1)).toBe(EMPTY_CELL);
+    expect(totalWater(world)).toBeCloseTo(1);
     expect([world.getCell(1, 1), world.getCell(3, 1)]).toContain("water");
   });
 
@@ -122,6 +123,31 @@ describe("createWorld", () => {
     expect(world.getCell(1, 0)).toBe(EMPTY_CELL);
     expect(world.getCell(1, 1)).toBe("sand");
     expect([world.getCell(0, 1), world.getCell(2, 1)]).toContain("water");
+    expect(totalWater(world)).toBeCloseTo(1);
+  });
+
+  it("redistributes displaced water volume through nearby liquid capacity", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 0, "sand");
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "water");
+    world.setCell(3, 1, "water");
+    world.setCell(0, 3, "sand");
+    world.setCell(1, 3, "sand");
+    world.setCell(2, 3, "sand");
+    world.setCell(3, 3, "sand");
+    world.setCell(4, 3, "sand");
+    world.step();
+
+    expect(world.getCell(2, 1)).toBe("sand");
+    expect(totalWater(world)).toBeCloseTo(3);
+    expect(waterCellCount(world)).toBeGreaterThan(1);
   });
 
   it("does not let sand displace water when the water has no lateral escape", () => {
@@ -164,6 +190,7 @@ describe("createWorld", () => {
     world.setCell(4, 2, "sand");
     world.step();
 
+    expect(totalWater(world)).toBeCloseTo(1);
     expect([world.getCell(1, 1), world.getCell(3, 1)]).toContain("water");
     expect(world.getCell(0, 1)).not.toBe("water");
     expect(world.getCell(4, 1)).not.toBe("water");
@@ -328,3 +355,35 @@ describe("createWorld", () => {
     expect(createWorld(definition).getCell(1, 1)).toBe(EMPTY_CELL);
   });
 });
+
+function totalWater(world: ReturnType<typeof createWorld>): number {
+  return world.snapshot().water.reduce((total, amount) => total + amount, 0);
+}
+
+function waterInRow(world: ReturnType<typeof createWorld>, row: number): number {
+  const snapshot = world.snapshot();
+  let total = 0;
+
+  for (let x = 0; x < snapshot.width; x += 1) {
+    total += snapshot.water[row * snapshot.width + x] ?? 0;
+  }
+
+  return total;
+}
+
+function waterBelowRow(world: ReturnType<typeof createWorld>, row: number): number {
+  const snapshot = world.snapshot();
+  let total = 0;
+
+  for (let y = row + 1; y < snapshot.height; y += 1) {
+    for (let x = 0; x < snapshot.width; x += 1) {
+      total += snapshot.water[y * snapshot.width + x] ?? 0;
+    }
+  }
+
+  return total;
+}
+
+function waterCellCount(world: ReturnType<typeof createWorld>): number {
+  return world.snapshot().water.filter((amount) => amount > 0.01).length;
+}

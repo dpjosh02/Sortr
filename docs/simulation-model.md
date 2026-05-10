@@ -74,9 +74,9 @@ MVP phases:
 - `gas`, such as steam.
 - `energy`, such as fire.
 
-Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by moving into that liquid's cell and pushing the liquid into a lateral escape cell on the same row.
+Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by moving into that liquid's occupied space and redistributing the liquid volume into nearby connected liquid capacity.
 
-Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids must move sideways, not into the moving particle's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed only when the water has a valid lateral escape cell. A liquid particle that has already been displaced during the current tick cannot be displaced again until the next tick; this prevents multiple sand particles from chain-pushing one water particle through a pile in a single frame.
+Solids and powders do not sink into one another. For MVP, displacement is only allowed into liquids. Displaced liquids are not moved into the powder's previous cell, because using the previous cell creates an uphill pumping artifact when sand and water fall together. Diagonal sand displacement into water is allowed when the displaced water volume has connected capacity to move into. A liquid volume cell that has already been displaced during the current tick cannot be displaced again until the next tick; this prevents multiple sand particles from chain-pushing the same volume through a pile in a single frame.
 
 Diagonal particle movement must respect line corners. If two player-drawn line cells touch diagonally, particles cannot pass between their shared corner.
 
@@ -112,13 +112,13 @@ Level-authored source that continuously introduces particles from a border or de
 
 Examples: water.
 
-Default preference:
+Liquids use a fractional volume layer separate from the solid particle grid. A cell can contain up to one unit of water. Water performs several relaxation passes per tick:
 
-1. Down.
-2. Down-left or down-right.
-3. Left or right.
+1. Fill open space below.
+2. Equalize sideways with neighboring liquid capacity.
+3. Apply a small upward pressure pass only when a lower cell is nearly full.
 
-Liquids should spread and settle into low areas.
+Liquids should spread, settle into low areas, conserve volume, and rise around denser powders when displaced.
 
 ### Powders
 
@@ -254,6 +254,7 @@ Performance tuning should prioritize:
 
 - Active region scanning.
 - Typed arrays for cell data.
+- Typed arrays for fractional liquid volume.
 - Avoiding per-particle object allocation in hot loops.
 - Rendering via `ImageData` or batched rect drawing after measurement.
 

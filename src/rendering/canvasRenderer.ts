@@ -43,10 +43,23 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
 
       for (let y = 0; y < snapshot.height; y += 1) {
         for (let x = 0; x < snapshot.width; x += 1) {
-          const cell = snapshot.cells[y * snapshot.width + x] ?? EMPTY_CELL;
+          const index = y * snapshot.width + x;
+          const cell = snapshot.cells[index] ?? EMPTY_CELL;
+          const waterAmount = snapshot.water[index] ?? 0;
 
           if (isDrawnLine(cell)) {
             context.fillStyle = "#111111";
+            context.fillRect(
+              x * options.cellSize,
+              y * options.cellSize,
+              options.cellSize,
+              options.cellSize,
+            );
+            continue;
+          }
+
+          if (waterAmount > 0.01) {
+            context.fillStyle = getWaterColor(waterAmount, x, y);
             context.fillRect(
               x * options.cellSize,
               y * options.cellSize,
@@ -71,6 +84,17 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       }
     },
   };
+}
+
+function getWaterColor(amount: number, x: number, y: number): string {
+  const colors = ELEMENT_PALETTE.water;
+  const baseColor = colors[(x * 17 + y * 31) % colors.length] ?? colors[0] ?? "#4f9fd9";
+
+  if (amount > 0.65) {
+    return baseColor;
+  }
+
+  return amount > 0.33 ? "#68b7e8" : "#9acff0";
 }
 
 function getParticleColor(element: CellValue, x: number, y: number): string {
