@@ -510,6 +510,7 @@ describe("createWorld", () => {
     world.step();
 
     expect(countElementCells(world, "fire")).toBe(1);
+    expect(Math.max(...world.snapshot().fireLife)).toBe(4);
   });
 
   it("lets fire particles exit through the top edge", () => {
@@ -522,6 +523,29 @@ describe("createWorld", () => {
 
     world.setCell(1, 0, "fire");
     world.step();
+
+    expect(countElementCells(world, "fire")).toBe(0);
+  });
+
+  it("expires fire particles after their short lifetime", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 1,
+    });
+
+    world.addLineCell(0, 1);
+    world.setCell(0, 2, "fire");
+
+    world.step();
+
+    expect(world.getCell(0, 2)).toBe("fire");
+    expect(world.snapshot().fireLife[2]).toBe(4);
+
+    for (let index = 0; index < 4; index += 1) {
+      world.step();
+    }
 
     expect(countElementCells(world, "fire")).toBe(0);
   });

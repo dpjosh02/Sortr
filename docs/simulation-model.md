@@ -174,7 +174,8 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Direction: slight upward flicker or source-bound movement.
 - Bucket target: possibly later, not required for MVP.
 - Reaction: creates steam when contacting water.
-- Lifetime: exits through the top border instead of accumulating on the ceiling.
+- Lifetime: expires after roughly 5 simulation ticks, fading lighter as it nears the end of life.
+- Boundary behavior: exits through the top border instead of accumulating on the ceiling.
 
 ### Steam
 
@@ -212,9 +213,10 @@ Fire should first appear through level-authored hearth objects instead of edge e
 
 - Occupies static solid cells that block particles and water.
 - Renders an anchored flame for visual life.
+- Emits short-lived fire particles from its top edge.
 - Converts water in its heat zone into steam while preserving the hearth.
 - Is rendered as a campfire object, not as particle state.
-- May optionally emit fire particles in later tuning, but this should be used carefully so fire does not become another awkward rising stream.
+- Uses particle TTL to avoid becoming a permanent upward fire stream.
 
 This keeps fire grounded as a puzzle tool: players route water into a hot fixture to create steam, then route the steam into bottom-opening buckets.
 

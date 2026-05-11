@@ -104,7 +104,7 @@ Only solid obstacles are required for MVP. Filters and temperature zones are res
 
 ## Hearths
 
-Hearths are static fire fixtures. They block material like a solid object, render an anchored flame, and convert water in their heat zone into steam. Optional fire-particle emission is reserved for later tuning. Use hearths before raw fire emitters when a level introduces steam creation.
+Hearths are static fire fixtures. They block material like a solid object, render an anchored flame, emit short-lived fire particles, and convert water in their heat zone into steam. Fire particles should have a short TTL so the hearth reads as a localized flame source instead of a permanent upward stream. Use hearths before raw fire emitters when a level introduces steam creation.
 
 ## Backgrounds
 

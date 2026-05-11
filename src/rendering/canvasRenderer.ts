@@ -7,6 +7,8 @@ import {
 } from "../simulation/elements";
 import type { HearthSnapshot, WorldSnapshot } from "../simulation/world";
 
+const FIRE_RENDER_TTL = 5;
+
 export interface CanvasRenderer {
   clear(background: string): void;
   drawPlaceholder(message: string): void;
@@ -73,7 +75,7 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
             continue;
           }
 
-          context.fillStyle = getParticleColor(cell, x, y);
+          context.fillStyle = getParticleColor(cell, x, y, snapshot.fireLife[index] ?? 0);
           context.fillRect(
             x * options.cellSize,
             y * options.cellSize,
@@ -141,15 +143,36 @@ function getWaterColor(amount: number, x: number, y: number): string {
   return amount > 0.33 ? "#68b7e8" : "#9acff0";
 }
 
-function getParticleColor(element: CellValue, x: number, y: number): string {
+function getParticleColor(element: CellValue, x: number, y: number, fireLife: number): string {
   if (!isElement(element)) {
     return "#000000";
+  }
+
+  if (element === "fire") {
+    return getFireColor(fireLife, x, y);
   }
 
   const colors = ELEMENT_PALETTE[element];
   const color = colors[(x * 17 + y * 31) % colors.length];
 
   return color ?? colors[0] ?? "#000000";
+}
+
+function getFireColor(fireLife: number, x: number, y: number): string {
+  const remainingRatio = Math.max(0, Math.min(1, fireLife / FIRE_RENDER_TTL));
+
+  if (remainingRatio <= 0.25) {
+    return "#fff0b8";
+  }
+
+  if (remainingRatio <= 0.5) {
+    return "#f9d36a";
+  }
+
+  const colors = ELEMENT_PALETTE.fire;
+  const color = colors[(x * 17 + y * 31) % colors.length];
+
+  return color ?? colors[0] ?? "#f26d3d";
 }
 
 function drawHearth(
