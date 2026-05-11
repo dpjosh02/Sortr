@@ -52,6 +52,7 @@ The first playable snapshot should include:
 - Pointer drawing for permanent black collision lines.
 - Reset button that clears lines and restarts the level.
 - Continuous emitters from playfield borders.
+- Distinct visual spawner fixtures for each emitted element, such as hoses for water and vents or chutes for other materials.
 - Buckets that track matching target elements.
 - Wrong elements may enter or settle inside buckets, but they do not count toward progress and do not cause contamination, failure, or reset behavior in MVP.
 - Level completion when all buckets reach their fill targets.

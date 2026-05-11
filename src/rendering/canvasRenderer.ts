@@ -6,15 +6,16 @@ import {
   isDrawnLine,
   isElement,
 } from "../simulation/elements";
+import type { EmitterDefinition } from "../simulation/emitters";
 import {
   COMPLETION_TEXT_ROW_DROP_TICKS,
   COMPLETION_TEXT_ROW_STAGGER_TICKS,
   FIRE_TTL,
   type CollapseCell,
-  type HearthSnapshot,
-  type ObstacleDefinition,
   type WorldSnapshot,
 } from "../simulation/world";
+
+import { drawEmitterFixtures, drawHearth, drawObstacle } from "./worldFixtures";
 
 export interface CanvasRenderer {
   clear(background: string): void;
@@ -25,6 +26,7 @@ export interface CanvasRenderer {
 export interface WorldRenderOptions {
   readonly background: string;
   readonly cellSize: number;
+  readonly emitters: readonly EmitterDefinition[];
 }
 
 export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer {
@@ -101,6 +103,13 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       for (const obstacle of snapshot.obstacles) {
         drawObstacle(context, obstacle, options.cellSize);
       }
+
+      drawEmitterFixtures(context, options.emitters, {
+        cellSize: options.cellSize,
+        height: snapshot.height,
+        tick: snapshot.tick,
+        width: snapshot.width,
+      });
 
       for (const bucket of snapshot.buckets) {
         const x = bucket.rect.x * options.cellSize;
@@ -328,73 +337,4 @@ function getFireColor(fireLife: number, x: number, y: number): string {
   const color = colors[(x * 17 + y * 31) % colors.length];
 
   return color ?? colors[0] ?? "#f26d3d";
-}
-
-function drawHearth(
-  context: CanvasRenderingContext2D,
-  hearth: HearthSnapshot,
-  cellSize: number,
-  tick: number,
-): void {
-  const x = hearth.rect.x * cellSize;
-  const y = hearth.rect.y * cellSize;
-  const width = hearth.rect.width * cellSize;
-  const height = hearth.rect.height * cellSize;
-  const emberHeight = Math.max(cellSize, Math.floor(height / 2));
-
-  context.fillStyle = "#5f3f2d";
-  context.fillRect(x, y + height - emberHeight, width, emberHeight);
-
-  context.fillStyle = "#2c1f1a";
-  context.fillRect(x, y + height - cellSize, width, cellSize);
-
-  context.fillStyle = "#8d4d2e";
-  context.fillRect(
-    x + cellSize,
-    y + height - emberHeight,
-    Math.max(cellSize, width - cellSize * 2),
-    cellSize,
-  );
-
-  const flicker = tick % 2 === 0 ? 0 : cellSize;
-  const flameY = y - cellSize * 2;
-  const flameWidth = Math.max(cellSize, Math.floor(width / 4));
-  const centerX = x + Math.floor(width / 2);
-
-  context.fillStyle = "#f26d3d";
-  context.fillRect(centerX - flameWidth, flameY + flicker, flameWidth * 2, cellSize * 3);
-
-  context.fillStyle = "#f9d36a";
-  context.fillRect(
-    centerX - Math.floor(flameWidth / 2),
-    flameY + cellSize,
-    flameWidth,
-    cellSize * 2,
-  );
-}
-
-function drawObstacle(
-  context: CanvasRenderingContext2D,
-  obstacle: ObstacleDefinition,
-  cellSize: number,
-): void {
-  context.fillStyle = "#111111";
-
-  if (obstacle.kind === "solid-rect") {
-    context.fillRect(
-      obstacle.rect.x * cellSize,
-      obstacle.rect.y * cellSize,
-      obstacle.rect.width * cellSize,
-      obstacle.rect.height * cellSize,
-    );
-    return;
-  }
-
-  context.strokeStyle = "#111111";
-  context.lineCap = "square";
-  context.lineWidth = Math.max(cellSize, obstacle.line.thickness * cellSize);
-  context.beginPath();
-  context.moveTo(obstacle.line.x1 * cellSize, obstacle.line.y1 * cellSize);
-  context.lineTo(obstacle.line.x2 * cellSize, obstacle.line.y2 * cellSize);
-  context.stroke();
 }

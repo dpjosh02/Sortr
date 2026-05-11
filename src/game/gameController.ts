@@ -177,6 +177,7 @@ function createControllerState(options: ControllerStateOptions): ControllerState
     options.renderer.drawWorld(snapshot, {
       background: level.background,
       cellSize: level.cellSize,
+      emitters: level.world.emitters,
     });
     options.hud.setNextButtonVisible(snapshot.isComplete && hasNextLevel);
     options.hud.setCompletionText(

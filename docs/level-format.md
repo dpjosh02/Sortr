@@ -55,6 +55,7 @@ type EmitterDefinition = {
   id: string;
   element: ElementType;
   edge: "top" | "right" | "bottom" | "left";
+  fixture?: EmitterFixtureType;
   range: {
     start: number;
     end: number;
@@ -64,6 +65,17 @@ type EmitterDefinition = {
 ```
 
 MVP emitters are continuous. `ratePerTick` may be fractional; emitter state carries the remainder deterministically across ticks. If max limits are added later, they should be level-authored.
+
+`fixture` is optional render metadata. The simulation ignores it; the renderer uses it to draw a readable source object. When omitted, the renderer chooses a default fixture from the emitted element:
+
+- `water`: hose.
+- `sand`: sand pump.
+- `fire`: charcoal bed.
+- `steam`: copper vent.
+- `dirt`: clay chute.
+- `mud`: slurry pipe.
+- `smoke`: soot vent.
+- `ash`: ash sifter.
 
 ## Buckets
 

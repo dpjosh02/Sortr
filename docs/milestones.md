@@ -275,6 +275,27 @@ User test:
 
 - Confirm the smoke/ash level reads as a chemistry chain and not as a precision-routing challenge.
 
+## Snapshot 12: Readable Spawner Fixtures
+
+Goal: Make element sources visually self-explanatory without changing simulation behavior.
+
+Deliverables:
+
+- Renderer-owned fixture art for each current emitter element.
+- Optional emitter fixture metadata in the level format.
+- Default fixture mapping so existing levels get readable spawners without data churn.
+- Tests for fixture defaults and authored overrides.
+
+Exit criteria:
+
+- Each emitted element has a distinct source silhouette and material cue.
+- Simulation spawning behavior remains unchanged.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm players can infer what each source emits before watching the first particles spawn.
+
 ## Later Milestones
 
 - Continue chemistry chain expansion: oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.

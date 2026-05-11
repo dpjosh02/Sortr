@@ -2,10 +2,21 @@ import type { ElementType } from "./elements";
 
 export type EmitterEdge = "top" | "right" | "bottom" | "left";
 
+export type EmitterFixtureType =
+  | "ash-sifter"
+  | "charcoal-bed"
+  | "clay-chute"
+  | "copper-vent"
+  | "hose"
+  | "sand-pump"
+  | "slurry-pipe"
+  | "soot-vent";
+
 export interface EmitterDefinition {
   readonly id: string;
   readonly element: ElementType;
   readonly edge: EmitterEdge;
+  readonly fixture?: EmitterFixtureType;
   readonly range: {
     readonly start: number;
     readonly end: number;

@@ -39,7 +39,7 @@ Each tick should:
 
 The exact ordering can be revised if tests prove another order gives better gameplay, but the order must remain explicit and documented.
 
-When all bucket goals complete, the world latches into a completion-collapse state. Emitters stop immediately. The current particle grid, water layer, drawn lines, static obstacles, hearths, and bucket walls are captured into a pending non-reactive collapse grid. Collapse grains are then revealed in deterministic left-to-right column batches, so the completion effect sweeps across the playfield instead of dropping everything at once. Every revealed collapse cell behaves like sand: it falls down, then down-diagonal, collides with other collapse cells, and preserves its original display color. Static geometry becomes black collapse grains. Normal reactions, water flow, fire aging, bucket processing, and new drawing/spawning are disabled during this state.
+When all bucket goals complete, the world first enters a completion text phase. Emitters stop immediately, but existing materials keep simulating while the "Sortd!" text falls into the top middle of the screen row by row. After the text has fully landed and held briefly, the world latches into a completion-collapse state. The current particle grid, water layer, drawn lines, static obstacles, hearths, and bucket walls are captured into a non-reactive collapse grid. Every collapse cell is visible when the collapse phase starts, but only columns released by the left-to-right sweep can move. Released collapse cells behave like sand: they fall down, then down-diagonal, collide with other collapse cells, and preserve their original display color. Static geometry becomes black collapse grains. Normal reactions, water flow, fire aging, bucket processing, and new drawing/spawning are disabled during the collapse phase.
 
 ## Determinism
 
@@ -122,6 +122,7 @@ Goal region that accepts only a configured target element for MVP. Wrong element
 ### Emitter
 
 Level-authored source that continuously introduces particles from a border or defined cell range.
+Emitter fixture art is renderer-owned. Levels may optionally choose a fixture, but simulation only uses the emitted element, edge, range, and rate.
 
 ## Movement Families
 
