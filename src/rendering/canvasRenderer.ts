@@ -7,6 +7,8 @@ import {
   isElement,
 } from "../simulation/elements";
 import {
+  COMPLETION_TEXT_ROW_DROP_TICKS,
+  COMPLETION_TEXT_ROW_STAGGER_TICKS,
   FIRE_TTL,
   type CollapseCell,
   type HearthSnapshot,
@@ -50,7 +52,7 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
 
       if (snapshot.isCollapseActive) {
         drawCollapseWorld(context, snapshot, options);
-        drawCompletionText(context, canvas.width, options.cellSize);
+        drawCompletionText(context, canvas.width, options.cellSize, snapshot.completionTick);
         return;
       }
 
@@ -139,6 +141,10 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       for (const hearth of snapshot.hearths) {
         drawHearth(context, hearth, options.cellSize, snapshot.tick);
       }
+
+      if (snapshot.isComplete) {
+        drawCompletionText(context, canvas.width, options.cellSize, snapshot.completionTick);
+      }
     },
   };
 }
@@ -184,6 +190,7 @@ function drawCompletionText(
   context: CanvasRenderingContext2D,
   canvasWidth: number,
   cellSize: number,
+  completionTick: number,
 ): void {
   const text = "Sortd!";
   const scale = Math.max(2, Math.floor(cellSize * 1.5));
@@ -202,7 +209,7 @@ function drawCompletionText(
       continue;
     }
 
-    drawGlyph(context, glyph, cursorX, y, scale);
+    drawGlyph(context, glyph, cursorX, y, scale, completionTick);
     cursorX += getGlyphWidth(glyph) * scale + letterGap;
   }
 }
@@ -238,16 +245,42 @@ function drawGlyph(
   x: number,
   y: number,
   scale: number,
+  completionTick: number,
 ): void {
   for (let row = 0; row < glyph.length; row += 1) {
     const line = glyph[row] ?? "";
+    const rowY = getCompletionTextRowY(y, row, scale, completionTick);
+
+    if (rowY === null) {
+      continue;
+    }
 
     for (let column = 0; column < line.length; column += 1) {
       if (line[column] === "1") {
-        context.fillRect(x + column * scale, y + row * scale, scale, scale);
+        context.fillRect(x + column * scale, rowY, scale, scale);
       }
     }
   }
+}
+
+function getCompletionTextRowY(
+  finalY: number,
+  row: number,
+  scale: number,
+  completionTick: number,
+): number | null {
+  const rowStartTick = row * COMPLETION_TEXT_ROW_STAGGER_TICKS;
+  const elapsed = completionTick - rowStartTick;
+
+  if (elapsed < 0) {
+    return null;
+  }
+
+  const finalRowY = finalY + row * scale;
+  const progress = Math.min(1, elapsed / COMPLETION_TEXT_ROW_DROP_TICKS);
+  const startOffset = -finalRowY - scale;
+
+  return Math.round(finalRowY + startOffset * (1 - progress));
 }
 
 function getBucketFillColor(element: ElementType): string {

@@ -34,6 +34,7 @@ import { processReactions } from "./reactions";
 import { createStaticSolidCells, isHearthSolidCell, isStaticSolidCell } from "./solids";
 import {
   FIRE_TTL,
+  COMPLETION_COLLAPSE_START_TICK,
   MAX_WATER,
   MIN_WATER,
   PRESSURE_DISPLACEMENT_SEARCH_RADIUS,
@@ -59,7 +60,15 @@ export type {
   WorldDefinition,
   WorldSnapshot,
 } from "./types";
-export { FIRE_TTL };
+export {
+  COLLAPSE_RELEASE_COLUMNS_PER_TICK,
+  COMPLETION_COLLAPSE_START_TICK,
+  COMPLETION_TEXT_HOLD_TICKS,
+  COMPLETION_TEXT_ROW_COUNT,
+  COMPLETION_TEXT_ROW_DROP_TICKS,
+  COMPLETION_TEXT_ROW_STAGGER_TICKS,
+  FIRE_TTL,
+} from "./types";
 
 export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("width", definition.width);
@@ -69,12 +78,15 @@ export function createWorld(definition: WorldDefinition): World {
     buckets: definition.buckets?.map(createBucketState) ?? [],
     cells: Array<CellValue>(definition.width * definition.height).fill(EMPTY_CELL),
     collapseCells: Array<0>(definition.width * definition.height).fill(EMPTY_CELL),
+    collapseReleaseColumn: 0,
+    completionTick: 0,
     emitters: definition.emitters.map(createEmitterState),
     fireLife: Array<number>(definition.width * definition.height).fill(0),
     height: definition.height,
     hearths: definition.hearths?.map(createHearthState) ?? [],
     obstacles: definition.obstacles ?? [],
     random: createSeededRandom(definition.seed),
+    isCollapseActive: false,
     isComplete: false,
     staticSolids: createStaticSolidCells(definition),
     tick: 0,
@@ -116,7 +128,7 @@ export function createWorld(definition: WorldDefinition): World {
         return EMPTY_CELL;
       }
 
-      if (state.isComplete) {
+      if (state.isCollapseActive) {
         return getCollapseVisibleCell(state, x, y);
       }
 
@@ -133,30 +145,47 @@ export function createWorld(definition: WorldDefinition): World {
       return createSnapshot(state);
     },
     step(): void {
-      if (state.isComplete) {
+      if (state.isCollapseActive) {
         moveCompletionCollapse(state);
+        state.completionTick += 1;
         state.tick += 1;
         return;
       }
 
-      spawnFromEmitters(state);
-      processHearths(state, true);
-      processBuckets(state);
-      processReactions(state);
-      moveParticles(state);
-      ageFireParticles(state);
-      processHearths(state, false);
-      processBuckets(state);
+      stepActiveSimulation(state);
 
-      if (isWorldComplete(state)) {
+      if (!state.isComplete && isWorldComplete(state)) {
         state.isComplete = true;
-        startCompletionCollapse(state);
-        moveCompletionCollapse(state);
+      }
+
+      if (state.isComplete) {
+        state.completionTick += 1;
+
+        if (state.completionTick >= COMPLETION_COLLAPSE_START_TICK) {
+          startCompletionCollapse(state);
+          moveCompletionCollapse(state);
+        }
       }
 
       state.tick += 1;
     },
   };
+}
+
+function stepActiveSimulation(state: MutableWorldState): void {
+  if (!state.isComplete) {
+    spawnFromEmitters(state);
+    processHearths(state, true);
+  } else {
+    processHearths(state, false);
+  }
+
+  processBuckets(state);
+  processReactions(state);
+  moveParticles(state);
+  ageFireParticles(state);
+  processHearths(state, false);
+  processBuckets(state);
 }
 
 function addElementCell(
@@ -238,10 +267,11 @@ function createSnapshot(state: MutableWorldState): WorldSnapshot {
     buckets: createBucketSnapshots(state.buckets),
     cells: [...state.cells],
     collapseCells: [...state.collapseCells],
+    completionTick: state.completionTick,
     fireLife: [...state.fireLife],
     hearths: createHearthSnapshots(state.hearths),
     height: state.height,
-    isCollapseActive: state.isComplete,
+    isCollapseActive: state.isCollapseActive,
     isComplete: state.isComplete || isWorldComplete(state),
     obstacles: state.obstacles,
     particleCounts: countParticles(state),
@@ -254,7 +284,7 @@ function createSnapshot(state: MutableWorldState): WorldSnapshot {
 function countParticles(state: MutableWorldState): ParticleCount[] {
   const counts = new Map<ElementType, number>();
 
-  if (state.isComplete) {
+  if (state.isCollapseActive) {
     for (const cell of state.collapseCells) {
       if (isCollapseElement(cell)) {
         counts.set(cell, (counts.get(cell) ?? 0) + 1);

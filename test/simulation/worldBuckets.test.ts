@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { createWorld } from "../../src/simulation/world";
 
-import { countCollapseCells } from "./worldTestHelpers";
-
 describe("world buckets", () => {
   it("counts steam settled inside matching buckets", () => {
     const world = createWorld({
@@ -32,8 +30,7 @@ describe("world buckets", () => {
 
     expect(world.snapshot().buckets[0]?.accepted).toBe(1);
     expect(world.snapshot().isComplete).toBe(true);
-    expect(world.snapshot().isCollapseActive).toBe(true);
-    expect(countCollapseCells(world, "steam")).toBe(1);
+    expect(world.snapshot().isCollapseActive).toBe(false);
   });
 
   it("counts matching material that physically settles inside a bucket", () => {
@@ -69,8 +66,7 @@ describe("world buckets", () => {
     expect(snapshot.buckets[0]?.accepted).toBe(2);
     expect(snapshot.buckets[0]?.settled).toBe(2);
     expect(snapshot.isComplete).toBe(true);
-    expect(snapshot.isCollapseActive).toBe(true);
-    expect(countCollapseCells(world, "sand")).toBe(2);
+    expect(snapshot.isCollapseActive).toBe(false);
   });
 
   it("rejects wrong bucket elements without counting them", () => {
@@ -131,8 +127,7 @@ describe("world buckets", () => {
 
     expect(world.snapshot().buckets[0]?.accepted).toBeGreaterThan(1.9);
     expect(world.snapshot().isComplete).toBe(true);
-    expect(world.snapshot().isCollapseActive).toBe(true);
-    expect(countCollapseCells(world, "water")).toBeGreaterThan(0);
+    expect(world.snapshot().isCollapseActive).toBe(false);
   });
 
   it("blocks materials from entering bucket sides and bottom", () => {
@@ -197,7 +192,6 @@ describe("world buckets", () => {
     const snapshot = world.snapshot();
     expect(snapshot.buckets[0]?.accepted).toBe(1);
     expect(snapshot.isComplete).toBe(true);
-    expect(snapshot.isCollapseActive).toBe(true);
-    expect(countCollapseCells(world, "steam")).toBe(1);
+    expect(snapshot.isCollapseActive).toBe(false);
   });
 });

@@ -2,9 +2,17 @@ import { EMPTY_CELL, isDrawnLine, isElement, isEmpty } from "../elements";
 
 import { clearElementCell, getWaterAmount, toIndex } from "./grid";
 import { isStaticSolidCell } from "./solids";
-import { MIN_WATER, type CollapseCell, type MutableWorldState } from "./types";
+import {
+  COLLAPSE_RELEASE_COLUMNS_PER_TICK,
+  MIN_WATER,
+  type CollapseCell,
+  type MutableWorldState,
+} from "./types";
 
 export function startCompletionCollapse(state: MutableWorldState): void {
+  state.collapseReleaseColumn = 0;
+  state.isCollapseActive = true;
+
   for (let y = 0; y < state.height; y += 1) {
     for (let x = 0; x < state.width; x += 1) {
       const index = toIndex(state, x, y);
@@ -16,6 +24,8 @@ export function startCompletionCollapse(state: MutableWorldState): void {
 }
 
 export function moveCompletionCollapse(state: MutableWorldState): void {
+  advanceCompletionCollapseRelease(state);
+
   const moved = Array<boolean>(state.collapseCells.length).fill(false);
 
   for (let y = state.height - 1; y >= 0; y -= 1) {
@@ -25,7 +35,11 @@ export function moveCompletionCollapse(state: MutableWorldState): void {
       const x = leftToRight ? column : state.width - 1 - column;
       const index = toIndex(state, x, y);
 
-      if (state.collapseCells[index] === EMPTY_CELL || moved[index] === true) {
+      if (
+        x >= state.collapseReleaseColumn ||
+        state.collapseCells[index] === EMPTY_CELL ||
+        moved[index] === true
+      ) {
         continue;
       }
 
@@ -43,6 +57,13 @@ export function moveCompletionCollapse(state: MutableWorldState): void {
       }
     }
   }
+}
+
+function advanceCompletionCollapseRelease(state: MutableWorldState): void {
+  state.collapseReleaseColumn = Math.min(
+    state.width,
+    state.collapseReleaseColumn + COLLAPSE_RELEASE_COLUMNS_PER_TICK,
+  );
 }
 
 function getCollapseCellForPosition(state: MutableWorldState, x: number, y: number): CollapseCell {
@@ -76,6 +97,10 @@ function tryMoveCollapseCell(
   targetY: number,
 ): boolean {
   if (targetX < 0 || targetX >= state.width || targetY < 0 || targetY >= state.height) {
+    return false;
+  }
+
+  if (targetX >= state.collapseReleaseColumn) {
     return false;
   }
 

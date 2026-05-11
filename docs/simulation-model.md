@@ -39,7 +39,7 @@ Each tick should:
 
 The exact ordering can be revised if tests prove another order gives better gameplay, but the order must remain explicit and documented.
 
-When all bucket goals complete, the world latches into a completion-collapse state. Emitters stop immediately. The current particle grid, water layer, drawn lines, static obstacles, hearths, and bucket walls are converted into a separate non-reactive collapse grid. Every occupied collapse cell then behaves like sand: it falls down, then down-diagonal, collides with other collapse cells, and preserves its original display color. Static geometry becomes black collapse grains. Normal reactions, water flow, fire aging, bucket processing, and new drawing/spawning are disabled during this state.
+When all bucket goals complete, the world latches into a completion-collapse state. Emitters stop immediately. The current particle grid, water layer, drawn lines, static obstacles, hearths, and bucket walls are captured into a pending non-reactive collapse grid. Collapse grains are then revealed in deterministic left-to-right column batches, so the completion effect sweeps across the playfield instead of dropping everything at once. Every revealed collapse cell behaves like sand: it falls down, then down-diagonal, collides with other collapse cells, and preserves its original display color. Static geometry becomes black collapse grains. Normal reactions, water flow, fire aging, bucket processing, and new drawing/spawning are disabled during this state.
 
 ## Determinism
 
@@ -75,16 +75,16 @@ Each element has a compact physical definition:
 
 Current phases:
 
-- `powder`, such as sand, dirt, and mud.
+- `powder`, such as sand, dirt, mud, and ash.
 - `liquid`, such as water.
-- `gas`, such as steam.
+- `gas`, such as steam and smoke.
 - `energy`, such as fire.
 
 Current behavior categories:
 
 - `liquid-flow`, used by water in the fractional liquid layer.
-- `powder-fall`, used by sand, dirt, and mud for down and down-diagonal falling.
-- `gas-rise`, used by steam for upward drift.
+- `powder-fall`, used by sand, dirt, mud, and ash for down and down-diagonal falling.
+- `gas-rise`, used by steam and smoke for upward drift.
 - `energy-rise`, used by fire for short-lived upward flicker.
 
 The element registry is the source of truth for these properties. Adding a future
@@ -214,6 +214,20 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Bucket target: yes.
 - Reaction: releases steam and leaves dirt when contacting fire.
 
+### Smoke
+
+- Type: gas.
+- Direction: rises.
+- Bucket target: yes.
+- Reaction: none in the first combustion slice.
+
+### Ash
+
+- Type: powder.
+- Direction: gravity-driven.
+- Bucket target: yes.
+- Reaction: none in the first combustion slice.
+
 ## Current Reaction Rules
 
 ### Water + Fire -> Steam
@@ -255,6 +269,16 @@ When fire contacts mud in an orthogonal or diagonal neighboring cell:
 
 This keeps the first chemistry family chainable without adding a separate temperature-zone tool. Hearths can supply the fire particles for authored levels.
 
+### Fire + Dirt -> Smoke + Ash
+
+When fire contacts dirt in an orthogonal or diagonal neighboring cell:
+
+- Smoke is created at the fire cell.
+- Ash is created at the dirt cell.
+- The fire and dirt reactants are consumed.
+
+Smoke and ash deliberately reuse existing gas and powder movement. Add specialized smoke diffusion or ash behavior only after playtesting proves it is needed.
+
 If that makes levels too easy or fire too fragile, revise after playtesting.
 
 ### Hearths
@@ -278,8 +302,9 @@ Reaction priority should be explicit. Current priority:
 2. Hearth heat.
 3. Water + fire.
 4. Fire + mud.
-5. Dirt + water.
-6. Movement.
+5. Fire + dirt.
+6. Dirt + water.
+7. Movement.
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 
@@ -297,6 +322,8 @@ The current registered rules are:
   water and fire.
 - Particle fire + particle mud -> steam at the fire cell and dirt at the mud
   cell, consuming the fire and mud.
+- Particle fire + particle dirt -> smoke at the fire cell and ash at the dirt
+  cell, consuming the fire and dirt.
 - Particle dirt + liquid-layer water -> mud at the dirt cell, consuming the
   water and dirt.
 - Liquid-layer water in a hearth heat zone -> steam at the heated cell,
@@ -311,7 +338,7 @@ trigger shape.
 
 Player drawing stamps line cells along the pointer path using grid-space interpolation. Lines:
 
-- Block water, sand, fire, steam, dirt, and mud.
+- Block water, sand, fire, steam, dirt, mud, smoke, and ash.
 - Persist until reset.
 - Are not individually erasable.
 - Have no ink limit.
@@ -365,11 +392,13 @@ Performance tuning should prioritize:
 
 Core tests should cover:
 
-- Movement for water, sand, steam, dirt, and mud.
+- Movement for water, sand, steam, dirt, mud, smoke, and ash.
 - Collision against drawn lines.
 - Emitter spawning.
 - Water + fire reaction.
 - Dirt + water reaction.
+- Fire + mud reaction.
+- Fire + dirt reaction.
 - Bucket matching and wrong-element non-counting behavior.
 - Reset behavior.
 - Determinism with a fixed seed and input sequence.

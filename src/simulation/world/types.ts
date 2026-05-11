@@ -71,6 +71,7 @@ export interface WorldSnapshot {
   readonly collapseCells: readonly CollapseCell[];
   readonly isCollapseActive: boolean;
   readonly isComplete: boolean;
+  readonly completionTick: number;
   readonly particleCounts: readonly ParticleCount[];
 }
 
@@ -119,6 +120,9 @@ export interface MutableWorldState {
   readonly obstacles: readonly ObstacleDefinition[];
   readonly staticSolids: ReadonlySet<number>;
   readonly collapseCells: CollapseCell[];
+  collapseReleaseColumn: number;
+  completionTick: number;
+  isCollapseActive: boolean;
   isComplete: boolean;
   tick: number;
 }
@@ -146,3 +150,12 @@ export const SUBMERGED_SETTLE_DISTANCE = 12;
 export const DEFAULT_HEARTH_FLAME_RATE = 0.35;
 export const DEFAULT_HEARTH_HEAT_RADIUS = 2;
 export const FIRE_TTL = 12;
+export const COMPLETION_TEXT_ROW_COUNT = 7;
+export const COMPLETION_TEXT_ROW_STAGGER_TICKS = 3;
+export const COMPLETION_TEXT_ROW_DROP_TICKS = 6;
+export const COMPLETION_TEXT_HOLD_TICKS = 18;
+export const COMPLETION_COLLAPSE_START_TICK =
+  (COMPLETION_TEXT_ROW_COUNT - 1) * COMPLETION_TEXT_ROW_STAGGER_TICKS +
+  COMPLETION_TEXT_ROW_DROP_TICKS +
+  COMPLETION_TEXT_HOLD_TICKS;
+export const COLLAPSE_RELEASE_COLUMNS_PER_TICK = 2;
