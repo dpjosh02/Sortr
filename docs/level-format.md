@@ -15,18 +15,38 @@ type LevelDefinition = {
   id: string;
   title: string;
   background: string;
-  grid: {
-    width: number;
-    height: number;
-    cellSize: number;
-  };
-  emitters: EmitterDefinition[];
-  buckets: BucketDefinition[];
-  hearths?: HearthDefinition[];
-  obstacles: ObstacleDefinition[];
+  cellSize: number;
+  lesson?: string;
+  designerNotes?: string;
   tutorialHint?: string;
+  unlock?: UnlockMetadata;
+  world: WorldDefinition;
+};
+
+type UnlockMetadata = {
+  order: number;
+  requiresLevelId?: string;
+  startsUnlocked?: boolean;
+};
+
+type WorldDefinition = {
+  width: number;
+  height: number;
+  seed: number;
+  emitters: EmitterDefinition[];
+  buckets?: BucketDefinition[];
+  hearths?: HearthDefinition[];
+  obstacles?: ObstacleDefinition[];
 };
 ```
+
+The current implementation keeps render scale (`cellSize`) on the level and
+simulation dimensions on `world`. This preserves a JSON-compatible level shape
+while keeping renderer concerns out of the simulation world definition.
+
+The first authored campaign levels should include `lesson` and `designerNotes`
+even though the fields are optional in the general shape. Imported or prototype
+levels may omit them, but snapshot-ready campaign levels should not.
 
 ## Emitters
 
@@ -39,12 +59,11 @@ type EmitterDefinition = {
     start: number;
     end: number;
   };
-  ratePerSecond: number;
-  maxParticles?: number;
+  ratePerTick: number;
 };
 ```
 
-MVP emitters are continuous and may omit `maxParticles`. If max limits are added later, they should be level-authored.
+MVP emitters are continuous. `ratePerTick` may be fractional; emitter state carries the remainder deterministically across ticks. If max limits are added later, they should be level-authored.
 
 ## Buckets
 
@@ -63,14 +82,14 @@ type BucketDefinition = {
 };
 ```
 
-MVP buckets only accept pure matching elements. Wrong elements do not count. Buckets behave as open containers: side walls block material, the wall opposite the intake blocks material, and the intake side stays open. Falling materials usually use `top`; rising gases such as steam use `bottom`. Fill progress is measured from matching material currently settled inside the bucket interior.
+MVP buckets count only matching target elements. Wrong elements may enter or settle inside the bucket, but they do not count toward progress and do not cause contamination, failure, or reset behavior. Buckets behave as open containers: side walls block material, the wall opposite the intake blocks material, and the intake side stays open. Falling materials usually use `top`; rising gases such as steam use `bottom`. Fill progress is measured from matching material currently settled inside the bucket interior.
 
 ## Obstacles
 
 ```ts
 type ObstacleDefinition = {
   id: string;
-  kind: "solid-rect" | "solid-line" | "filter" | "heat-zone" | "cold-zone";
+  kind: "solid-rect" | "solid-line";
   rect?: {
     x: number;
     y: number;
@@ -84,7 +103,6 @@ type ObstacleDefinition = {
     y2: number;
     thickness: number;
   };
-  accepts?: ElementType[];
 };
 
 type HearthDefinition = {
@@ -100,7 +118,7 @@ type HearthDefinition = {
 };
 ```
 
-Only solid obstacles are required for MVP. Filters and temperature zones are reserved for later levels.
+Only solid obstacles are currently implemented. Filters and temperature zones are reserved for later levels and should be added to this type only when simulation support exists.
 
 ## Hearths
 
@@ -113,6 +131,28 @@ Backgrounds should use soft solid colors, not busy illustrations. The color is l
 ## Tutorial Hints
 
 Hints are optional and should be short. They are allowed in early levels but should not explain every solution. The game should teach primarily through level structure.
+
+## Designer Notes
+
+Each snapshot-ready authored campaign level should include:
+
+- `lesson`: the single major idea the level is intended to teach.
+- `designerNotes`: content-design context for reviewing the level without prescribing one exact solution.
+
+Notes should explain why the layout exists, not the step-by-step solution.
+
+## Unlock Metadata
+
+MVP progression is linear next-level flow. Unlock metadata is optional in the
+level format so the campaign order can be serialized explicitly once progression
+persistence exists.
+
+- `order` defines the linear campaign order.
+- `requiresLevelId` can point to the previous level required for unlock.
+- `startsUnlocked` should be true only for the first campaign level or explicit test content.
+
+Level select is later scope. When added, it should allow replaying beaten or
+otherwise unlocked levels, not skipping ahead through the campaign by default.
 
 ## Initial Level Catalog
 
@@ -161,5 +201,7 @@ A level should be considered valid if:
 - Obstacles fit inside the grid.
 - Required bucket counts are positive.
 - Target elements exist in the element registry.
+- Snapshot-ready campaign levels include a lesson and designer notes.
+- Unlock metadata, if present, points to an existing level id and preserves linear campaign order.
 
 Validation should run in tests once the level catalog exists.
