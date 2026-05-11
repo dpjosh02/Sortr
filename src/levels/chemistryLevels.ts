@@ -127,4 +127,58 @@ export const CHEMISTRY_LEVELS: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e5e1d7",
+    cellSize: 4,
+    designerNotes:
+      "This review level uses one dirt source with a water side and a hearth side, inviting players to split the stream instead of solving a single straight route.",
+    id: "009-branching-reactions",
+    lesson: "Split one dirt source into wet and hot reaction paths.",
+    title: "Branching Reactions",
+    world: {
+      buckets: [
+        {
+          id: "mud-bucket",
+          intake: "top",
+          rect: { height: 24, width: 40, x: 26, y: 126 },
+          required: 24,
+          target: "mud",
+        },
+        {
+          id: "smoke-bucket",
+          intake: "bottom",
+          rect: { height: 24, width: 40, x: 174, y: 20 },
+          required: 14,
+          target: "smoke",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: { end: 48, start: 42 },
+          ratePerTick: 0.4,
+        },
+        {
+          edge: "top",
+          element: "dirt",
+          id: "dirt-source",
+          range: { end: 120, start: 114 },
+          ratePerTick: 0.6,
+        },
+      ],
+      hearths: [
+        {
+          flameRatePerTick: 0.75,
+          heatRadius: 2,
+          id: "branching-hearth",
+          rect: { height: 4, width: 16, x: 150, y: 148 },
+        },
+      ],
+      height: 160,
+      seed: 20260511,
+      width: 240,
+    },
+  },
 ];

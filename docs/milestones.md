@@ -296,6 +296,27 @@ User test:
 
 - Confirm players can infer what each source emits before watching the first particles spawn.
 
+## Snapshot 13: Branching Reaction Routes
+
+Goal: Add a campaign review level that asks players to split one source into two existing chemistry paths.
+
+Deliverables:
+
+- One hand-authored campaign level that uses the current dirt, water, mud, hearth, smoke, and ash rules.
+- Catalog validation covering the new level and its lesson.
+- Level-format documentation updated with the new campaign entry.
+
+Exit criteria:
+
+- Existing campaign levels still work.
+- The new level teaches one idea: branch a dirt stream between wet and hot reactions.
+- No new elements, mechanics, player tools, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm the branching level feels like a flexible chemistry puzzle rather than a precision drawing test.
+
 ## Later Milestones
 
 - Continue chemistry chain expansion: oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.

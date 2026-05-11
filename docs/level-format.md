@@ -223,6 +223,14 @@ otherwise unlocked levels, not skipping ahead through the campaign by default.
 - Fixed hearth.
 - Upside-down smoke bucket and top-opening ash bucket.
 
+### 009-branching-reactions
+
+- Teaches branching one source into two reaction paths.
+- Dirt emitter and water emitter.
+- Fixed hearth.
+- Mud bucket and upside-down smoke bucket.
+- Open space gives players room to choose how much dirt to wet and how much to heat.
+
 ## Level Validation
 
 A level should be considered valid if:
