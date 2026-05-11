@@ -7,15 +7,18 @@ import {
   getDevSandboxElementForKey,
   isDevToolsToggleKey,
 } from "../../src/dev/sandboxTools";
+import { ELEMENTS } from "../../src/simulation/elements";
 
 describe("dev sandbox tools", () => {
   it("keeps sandbox element choices out of player action mapping", () => {
-    expect(DEV_SANDBOX_ELEMENTS).toEqual(["water", "sand", "fire", "steam"]);
+    expect(DEV_SANDBOX_ELEMENTS).toEqual(ELEMENTS);
     expect(isDevToolsToggleKey("d")).toBe(true);
     expect(isDevToolsToggleKey("r")).toBe(false);
     expect(getDevSandboxElementForKey("1")).toBe("water");
     expect(getDevSandboxElementForKey("4")).toBe("steam");
-    expect(getDevSandboxElementForKey("5")).toBeNull();
+    expect(getDevSandboxElementForKey("5")).toBe("dirt");
+    expect(getDevSandboxElementForKey("6")).toBe("mud");
+    expect(getDevSandboxElementForKey("7")).toBeNull();
   });
 
   it("uses the existing plus-shaped sandbox brush stamp", () => {

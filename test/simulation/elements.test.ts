@@ -14,9 +14,9 @@ import {
 
 describe("element registry", () => {
   it("keeps current elements registered with behavior categories", () => {
-    expect(ELEMENTS).toEqual(["water", "sand", "fire", "steam"]);
+    expect(ELEMENTS).toEqual(["water", "sand", "fire", "steam", "dirt", "mud"]);
     expect(getElementsByBehavior("liquid-flow")).toEqual(["water"]);
-    expect(getElementsByBehavior("powder-fall")).toEqual(["sand"]);
+    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud"]);
     expect(getElementsByBehavior("gas-rise")).toEqual(["steam"]);
     expect(getElementsByBehavior("energy-rise")).toEqual(["fire"]);
   });
@@ -26,6 +26,8 @@ describe("element registry", () => {
     expect(usesLiquidLayer("sand")).toBe(false);
     expect(usesLiquidLayer("steam")).toBe(false);
     expect(usesLiquidLayer("fire")).toBe(false);
+    expect(usesLiquidLayer("dirt")).toBe(false);
+    expect(usesLiquidLayer("mud")).toBe(false);
   });
 
   it("keeps renderer palettes in element registry data", () => {
@@ -33,6 +35,8 @@ describe("element registry", () => {
     expect(getElementPalette("sand")[0]).toBe("#d7bd72");
     expect(getElementPalette("fire")[0]).toBe("#f26d3d");
     expect(getElementPalette("steam")[0]).toBe("#d8dde1");
+    expect(getElementPalette("dirt")[0]).toBe("#8a6a45");
+    expect(getElementPalette("mud")[0]).toBe("#5f4a38");
   });
 });
 
@@ -40,6 +44,8 @@ describe("reaction rule registry", () => {
   it("keeps reaction rule order deterministic for future chemistry chains", () => {
     expect(REACTION_RULES.map((rule) => rule.id)).toEqual([
       "water-fire-to-steam",
+      "fire-mud-to-steam-dirt",
+      "dirt-water-to-mud",
       "hearth-heat-water-to-steam",
     ]);
   });
@@ -63,6 +69,50 @@ describe("reaction rule registry", () => {
         ],
         source: {
           element: "fire",
+          storage: "particle",
+        },
+      },
+      {
+        consumeNeighbor: true,
+        consumeSource: true,
+        id: "fire-mud-to-steam-dirt",
+        kind: "neighbor-contact",
+        neighbor: {
+          element: "mud",
+          storage: "particle",
+        },
+        products: [
+          {
+            element: "steam",
+            location: "source-cell",
+          },
+          {
+            element: "dirt",
+            location: "neighbor-cell",
+          },
+        ],
+        source: {
+          element: "fire",
+          storage: "particle",
+        },
+      },
+      {
+        consumeNeighbor: true,
+        consumeSource: true,
+        id: "dirt-water-to-mud",
+        kind: "neighbor-contact",
+        neighbor: {
+          element: "water",
+          storage: "liquid-layer",
+        },
+        products: [
+          {
+            element: "mud",
+            location: "source-cell",
+          },
+        ],
+        source: {
+          element: "dirt",
           storage: "particle",
         },
       },

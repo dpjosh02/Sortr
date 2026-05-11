@@ -16,6 +16,13 @@ export interface ElementDefinition {
 }
 
 export const ELEMENT_REGISTRY = {
+  dirt: {
+    behavior: "powder-fall",
+    density: 1.7,
+    palette: ["#8a6a45", "#765737", "#a07d55"],
+    phase: "powder",
+    storage: "particle",
+  },
   fire: {
     behavior: "energy-rise",
     density: 0,
@@ -37,6 +44,13 @@ export const ELEMENT_REGISTRY = {
     phase: "gas",
     storage: "particle",
   },
+  mud: {
+    behavior: "powder-fall",
+    density: 1.9,
+    palette: ["#5f4a38", "#4e3c2f", "#77604a"],
+    phase: "powder",
+    storage: "particle",
+  },
   water: {
     behavior: "liquid-flow",
     density: 1,
@@ -53,6 +67,8 @@ export const ELEMENTS = [
   "sand",
   "fire",
   "steam",
+  "dirt",
+  "mud",
 ] as const satisfies readonly ElementType[];
 
 export type CellValue = typeof DRAWN_LINE_CELL | typeof EMPTY_CELL | ElementType;
@@ -61,7 +77,9 @@ export const ELEMENT_DEFINITIONS: Readonly<Record<ElementType, ElementDefinition
   ELEMENT_REGISTRY;
 
 export const ELEMENT_PALETTE: Readonly<Record<ElementType, readonly string[]>> = {
+  dirt: ELEMENT_REGISTRY.dirt.palette,
   fire: ELEMENT_REGISTRY.fire.palette,
+  mud: ELEMENT_REGISTRY.mud.palette,
   sand: ELEMENT_REGISTRY.sand.palette,
   steam: ELEMENT_REGISTRY.steam.palette,
   water: ELEMENT_REGISTRY.water.palette,

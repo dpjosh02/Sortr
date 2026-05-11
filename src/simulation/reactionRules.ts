@@ -57,6 +57,50 @@ export const REACTION_RULES: readonly ReactionRule[] = [
     },
   },
   {
+    consumeNeighbor: true,
+    consumeSource: true,
+    id: "fire-mud-to-steam-dirt",
+    kind: "neighbor-contact",
+    neighbor: {
+      element: "mud",
+      storage: "particle",
+    },
+    products: [
+      {
+        element: "steam",
+        location: "source-cell",
+      },
+      {
+        element: "dirt",
+        location: "neighbor-cell",
+      },
+    ],
+    source: {
+      element: "fire",
+      storage: "particle",
+    },
+  },
+  {
+    consumeNeighbor: true,
+    consumeSource: true,
+    id: "dirt-water-to-mud",
+    kind: "neighbor-contact",
+    neighbor: {
+      element: "water",
+      storage: "liquid-layer",
+    },
+    products: [
+      {
+        element: "mud",
+        location: "source-cell",
+      },
+    ],
+    source: {
+      element: "dirt",
+      storage: "particle",
+    },
+  },
+  {
     consumeReactant: true,
     id: "hearth-heat-water-to-steam",
     kind: "hearth-heat",

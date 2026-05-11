@@ -81,6 +81,78 @@ describe("world reactions and fire", () => {
     expect(countElementCells(world, "fire")).toBe(1);
   });
 
+  it("turns dirt touching water into mud", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "dirt");
+    world.step();
+
+    expect(totalWater(world)).toBeCloseTo(0);
+    expect(countElementCells(world, "dirt")).toBe(0);
+    expect(countElementCells(world, "mud")).toBe(1);
+  });
+
+  it("prioritizes steam when water touches fire before dirt can consume it", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "fire");
+    world.setCell(1, 2, "dirt");
+    world.step();
+
+    expect(totalWater(world)).toBeCloseTo(0);
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(countElementCells(world, "mud")).toBe(0);
+    expect(countElementCells(world, "dirt")).toBe(1);
+  });
+
+  it("heats mud into steam and dirt", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "fire");
+    world.setCell(2, 1, "mud");
+    world.step();
+
+    expect(countElementCells(world, "fire")).toBe(0);
+    expect(countElementCells(world, "mud")).toBe(0);
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(countElementCells(world, "dirt")).toBe(1);
+  });
+
+  it("uses water and fire before fire can dry neighboring mud", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "fire");
+    world.setCell(2, 2, "mud");
+    world.step();
+
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(countElementCells(world, "mud")).toBe(1);
+    expect(countElementCells(world, "dirt")).toBe(0);
+  });
+
   it("blocks falling particles with hearth solids", () => {
     const world = createWorld({
       emitters: [],

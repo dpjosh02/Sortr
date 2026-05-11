@@ -16,6 +16,8 @@ describe("LEVEL_CATALOG", () => {
     expect(getNextLevelIndex(0)).toBe(1);
     expect(getNextLevelIndex(LEVEL_CATALOG.length - 1)).toBeNull();
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("005-crossing-paths");
+    expect(LEVEL_CATALOG.map((level) => level.id)).toContain("006-mix-the-earth");
+    expect(LEVEL_CATALOG.map((level) => level.id)).toContain("007-warm-the-mud");
   });
 
   it("uses valid bucket definitions", () => {
@@ -117,6 +119,14 @@ describe("LEVEL_CATALOG", () => {
       {
         id: "005-crossing-paths",
         lesson: "Balance direct water collection with steam creation in the same space.",
+      },
+      {
+        id: "006-mix-the-earth",
+        lesson: "Combine dirt and water to make mud before routing it to the bucket.",
+      },
+      {
+        id: "007-warm-the-mud",
+        lesson: "Heat mud to release steam while dirt falls away.",
       },
     ]);
   });
