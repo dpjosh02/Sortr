@@ -27,6 +27,13 @@ describe("LEVEL_CATALOG", () => {
         expect(bucket.rect.x + bucket.rect.width).toBeLessThanOrEqual(level.world.width);
         expect(bucket.rect.y + bucket.rect.height).toBeLessThanOrEqual(level.world.height);
       }
+
+      for (const hearth of level.world.hearths ?? []) {
+        expect(hearth.rect.x).toBeGreaterThanOrEqual(0);
+        expect(hearth.rect.y).toBeGreaterThanOrEqual(0);
+        expect(hearth.rect.x + hearth.rect.width).toBeLessThanOrEqual(level.world.width);
+        expect(hearth.rect.y + hearth.rect.height).toBeLessThanOrEqual(level.world.height);
+      }
     }
   });
 });

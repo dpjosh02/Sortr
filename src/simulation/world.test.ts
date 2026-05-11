@@ -432,6 +432,100 @@ describe("createWorld", () => {
     expect(countElementCells(world, "steam")).toBe(1);
   });
 
+  it("turns water touching a hearth heat zone into steam", () => {
+    const world = createWorld({
+      emitters: [],
+      hearths: [
+        {
+          flameRatePerTick: 0,
+          heatRadius: 1,
+          id: "hearth",
+          rect: {
+            height: 1,
+            width: 3,
+            x: 1,
+            y: 3,
+          },
+        },
+      ],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 2, "water");
+    world.step();
+
+    expect(totalWater(world)).toBeCloseTo(0);
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(world.snapshot().hearths).toHaveLength(1);
+  });
+
+  it("blocks falling particles with hearth solids", () => {
+    const world = createWorld({
+      emitters: [],
+      hearths: [
+        {
+          flameRatePerTick: 0,
+          id: "hearth",
+          rect: {
+            height: 1,
+            width: 3,
+            x: 1,
+            y: 3,
+          },
+        },
+      ],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(world.getCell(2, 2)).toBe("sand");
+  });
+
+  it("emits flame particles from a hearth base", () => {
+    const world = createWorld({
+      emitters: [],
+      hearths: [
+        {
+          flameRatePerTick: 1,
+          id: "hearth",
+          rect: {
+            height: 1,
+            width: 3,
+            x: 1,
+            y: 3,
+          },
+        },
+      ],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.step();
+
+    expect(countElementCells(world, "fire")).toBe(1);
+  });
+
+  it("lets fire particles exit through the top edge", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 3,
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "fire");
+    world.step();
+
+    expect(countElementCells(world, "fire")).toBe(0);
+  });
+
   it("moves steam upward and blocks it with drawn lines", () => {
     const world = createWorld({
       emitters: [],

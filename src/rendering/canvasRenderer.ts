@@ -5,7 +5,7 @@ import {
   isDrawnLine,
   isElement,
 } from "../simulation/elements";
-import type { WorldSnapshot } from "../simulation/world";
+import type { HearthSnapshot, WorldSnapshot } from "../simulation/world";
 
 export interface CanvasRenderer {
   clear(background: string): void;
@@ -118,6 +118,10 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
           options.cellSize,
         );
       }
+
+      for (const hearth of snapshot.hearths) {
+        drawHearth(context, hearth, options.cellSize, snapshot.tick);
+      }
     },
   };
 }
@@ -146,4 +150,47 @@ function getParticleColor(element: CellValue, x: number, y: number): string {
   const color = colors[(x * 17 + y * 31) % colors.length];
 
   return color ?? colors[0] ?? "#000000";
+}
+
+function drawHearth(
+  context: CanvasRenderingContext2D,
+  hearth: HearthSnapshot,
+  cellSize: number,
+  tick: number,
+): void {
+  const x = hearth.rect.x * cellSize;
+  const y = hearth.rect.y * cellSize;
+  const width = hearth.rect.width * cellSize;
+  const height = hearth.rect.height * cellSize;
+  const emberHeight = Math.max(cellSize, Math.floor(height / 2));
+
+  context.fillStyle = "#5f3f2d";
+  context.fillRect(x, y + height - emberHeight, width, emberHeight);
+
+  context.fillStyle = "#2c1f1a";
+  context.fillRect(x, y + height - cellSize, width, cellSize);
+
+  context.fillStyle = "#8d4d2e";
+  context.fillRect(
+    x + cellSize,
+    y + height - emberHeight,
+    Math.max(cellSize, width - cellSize * 2),
+    cellSize,
+  );
+
+  const flicker = tick % 2 === 0 ? 0 : cellSize;
+  const flameY = y - cellSize * 2;
+  const flameWidth = Math.max(cellSize, Math.floor(width / 4));
+  const centerX = x + Math.floor(width / 2);
+
+  context.fillStyle = "#f26d3d";
+  context.fillRect(centerX - flameWidth, flameY + flicker, flameWidth * 2, cellSize * 3);
+
+  context.fillStyle = "#f9d36a";
+  context.fillRect(
+    centerX - Math.floor(flameWidth / 2),
+    flameY + cellSize,
+    flameWidth,
+    cellSize * 2,
+  );
 }

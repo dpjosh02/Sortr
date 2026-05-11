@@ -22,6 +22,7 @@ type LevelDefinition = {
   };
   emitters: EmitterDefinition[];
   buckets: BucketDefinition[];
+  hearths?: HearthDefinition[];
   obstacles: ObstacleDefinition[];
   tutorialHint?: string;
 };
@@ -85,9 +86,25 @@ type ObstacleDefinition = {
   };
   accepts?: ElementType[];
 };
+
+type HearthDefinition = {
+  id: string;
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  heatRadius?: number;
+  flameRatePerTick?: number;
+};
 ```
 
 Only solid obstacles are required for MVP. Filters and temperature zones are reserved for later levels.
+
+## Hearths
+
+Hearths are static fire fixtures. They block material like a solid object, render an anchored flame, and convert water in their heat zone into steam. Optional fire-particle emission is reserved for later tuning. Use hearths before raw fire emitters when a level introduces steam creation.
 
 ## Backgrounds
 
@@ -113,20 +130,18 @@ Hints are optional and should be short. They are allowed in early levels but sho
 - One offset sand bucket.
 - One simple obstacle ledge.
 
-### 003-two-streams
+### 003-make-it-rise
+
+- Teaches steam creation through a fixed hearth.
+- Water emitter.
+- Upside-down steam bucket.
+
+### 004-two-streams
 
 - Teaches separating elements.
 - Water emitter and sand emitter.
 - Water bucket and sand bucket.
 - Buckets positioned so direct paths cross unless the player manages flow.
-
-### 004-make-it-rise
-
-- Teaches water + fire -> steam.
-- Water emitter.
-- Fire emitter or fixed fire source.
-- Steam bucket near upper area.
-- Obstacles encourage routing water into fire first.
 
 ### 005-crossing-paths
 

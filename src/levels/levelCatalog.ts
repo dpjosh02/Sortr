@@ -114,15 +114,17 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
           },
           ratePerTick: 0.8,
         },
+      ],
+      hearths: [
         {
-          edge: "bottom",
-          element: "fire",
-          id: "fire-source",
-          range: {
-            end: 132,
-            start: 126,
+          heatRadius: 2,
+          id: "hearth",
+          rect: {
+            height: 4,
+            width: 12,
+            x: 124,
+            y: 148,
           },
-          ratePerTick: 0.35,
         },
       ],
       height: 160,

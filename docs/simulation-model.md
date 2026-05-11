@@ -174,6 +174,7 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Direction: slight upward flicker or source-bound movement.
 - Bucket target: possibly later, not required for MVP.
 - Reaction: creates steam when contacting water.
+- Lifetime: exits through the top border instead of accumulating on the ceiling.
 
 ### Steam
 
@@ -205,13 +206,26 @@ For the first implementation, prefer the simpler rule:
 
 If that makes levels too easy or fire too fragile, revise after playtesting.
 
+### Hearths
+
+Fire should first appear through level-authored hearth objects instead of edge emitters. A hearth:
+
+- Occupies static solid cells that block particles and water.
+- Renders an anchored flame for visual life.
+- Converts water in its heat zone into steam while preserving the hearth.
+- Is rendered as a campfire object, not as particle state.
+- May optionally emit fire particles in later tuning, but this should be used carefully so fire does not become another awkward rising stream.
+
+This keeps fire grounded as a puzzle tool: players route water into a hot fixture to create steam, then route the steam into bottom-opening buckets.
+
 ## Reaction Priority
 
 Reaction priority should be explicit. MVP priority:
 
 1. Bucket intake.
-2. Water + fire.
-3. Movement.
+2. Hearth heat.
+3. Water + fire.
+4. Movement.
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 

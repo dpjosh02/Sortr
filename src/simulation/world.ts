@@ -18,6 +18,7 @@ export interface WorldDefinition {
   readonly seed: number;
   readonly emitters: readonly EmitterDefinition[];
   readonly buckets?: readonly BucketDefinition[];
+  readonly hearths?: readonly HearthDefinition[];
 }
 
 export interface GridRect {
@@ -35,6 +36,13 @@ export interface BucketDefinition {
   readonly intake: "bottom" | "full-rect" | "top";
 }
 
+export interface HearthDefinition {
+  readonly id: string;
+  readonly rect: GridRect;
+  readonly flameRatePerTick?: number;
+  readonly heatRadius?: number;
+}
+
 export interface ParticleCount {
   readonly element: ElementType;
   readonly count: number;
@@ -47,6 +55,7 @@ export interface WorldSnapshot {
   readonly cells: readonly CellValue[];
   readonly water: readonly number[];
   readonly buckets: readonly BucketSnapshot[];
+  readonly hearths: readonly HearthSnapshot[];
   readonly isComplete: boolean;
   readonly particleCounts: readonly ParticleCount[];
 }
@@ -59,6 +68,13 @@ export interface BucketSnapshot {
   readonly settled: number;
   readonly rect: GridRect;
   readonly intake: "bottom" | "full-rect" | "top";
+}
+
+export interface HearthSnapshot {
+  readonly id: string;
+  readonly rect: GridRect;
+  readonly flameRatePerTick: number;
+  readonly heatRadius: number;
 }
 
 export interface World {
@@ -82,6 +98,7 @@ interface MutableWorldState {
   readonly random: SeededRandom;
   readonly emitters: EmitterState[];
   readonly buckets: BucketState[];
+  readonly hearths: HearthState[];
   tick: number;
 }
 
@@ -89,6 +106,11 @@ interface BucketState {
   readonly definition: BucketDefinition;
   accepted: number;
   settled: number;
+}
+
+interface HearthState {
+  readonly definition: Required<HearthDefinition>;
+  flameCarry: number;
 }
 
 const MIN_WATER = 0.01;
@@ -100,6 +122,8 @@ const DISPLACEMENT_SEARCH_RADIUS = 10;
 const PRESSURE_DISPLACEMENT_SEARCH_RADIUS = 40;
 const SAND_PRESSURE_COLUMN_HEIGHT = 3;
 const SUBMERGED_SETTLE_DISTANCE = 12;
+const DEFAULT_HEARTH_FLAME_RATE = 0;
+const DEFAULT_HEARTH_HEAT_RADIUS = 2;
 
 export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("width", definition.width);
@@ -110,6 +134,7 @@ export function createWorld(definition: WorldDefinition): World {
     cells: Array<CellValue>(definition.width * definition.height).fill(EMPTY_CELL),
     emitters: definition.emitters.map(createEmitterState),
     height: definition.height,
+    hearths: definition.hearths?.map(createHearthState) ?? [],
     random: createSeededRandom(definition.seed),
     tick: 0,
     water: Array<number>(definition.width * definition.height).fill(0),
@@ -128,6 +153,10 @@ export function createWorld(definition: WorldDefinition): World {
     },
     addElementCell(x: number, y: number, element: ElementType): void {
       if (!isInside(state, x, y)) {
+        return;
+      }
+
+      if (isStaticSolidCell(state, x, y)) {
         return;
       }
 
@@ -167,7 +196,7 @@ export function createWorld(definition: WorldDefinition): World {
       state.cells[index] = element;
     },
     addLineCell(x: number, y: number): void {
-      if (!isInside(state, x, y)) {
+      if (!isInside(state, x, y) || isHearthSolidCell(state, x, y)) {
         return;
       }
 
@@ -175,7 +204,7 @@ export function createWorld(definition: WorldDefinition): World {
     },
     addLineSegment(start: GridPoint, end: GridPoint): void {
       for (const cell of getLineCells(start, end)) {
-        if (isInside(state, cell.x, cell.y)) {
+        if (isInside(state, cell.x, cell.y) && !isHearthSolidCell(state, cell.x, cell.y)) {
           state.cells[toIndex(state, cell.x, cell.y)] = DRAWN_LINE_CELL;
         }
       }
@@ -208,6 +237,7 @@ export function createWorld(definition: WorldDefinition): World {
         cells: [...state.cells],
         buckets: createBucketSnapshots(state.buckets),
         height: state.height,
+        hearths: createHearthSnapshots(state.hearths),
         isComplete: isWorldComplete(state),
         particleCounts: countParticles(state),
         tick: state.tick,
@@ -217,9 +247,11 @@ export function createWorld(definition: WorldDefinition): World {
     },
     step(): void {
       spawnFromEmitters(state);
+      processHearths(state, true);
       processBuckets(state);
       processReactions(state);
       moveParticles(state);
+      processHearths(state, false);
       processBuckets(state);
       state.tick += 1;
     },
@@ -235,6 +267,20 @@ function createBucketState(definition: BucketDefinition): BucketState {
     accepted: 0,
     definition,
     settled: 0,
+  };
+}
+
+function createHearthState(definition: HearthDefinition): HearthState {
+  assertPositiveInteger("hearth width", definition.rect.width);
+  assertPositiveInteger("hearth height", definition.rect.height);
+
+  return {
+    definition: {
+      ...definition,
+      flameRatePerTick: definition.flameRatePerTick ?? DEFAULT_HEARTH_FLAME_RATE,
+      heatRadius: definition.heatRadius ?? DEFAULT_HEARTH_HEAT_RADIUS,
+    },
+    flameCarry: 0,
   };
 }
 
@@ -254,16 +300,109 @@ function spawnFromEmitters(state: MutableWorldState): void {
       const spawnCell = state.cells[spawnIndex] ?? EMPTY_CELL;
 
       if (emitter.definition.element === "water") {
-        if (isEmpty(spawnCell)) {
+        if (isEmpty(spawnCell) && !isStaticSolidCell(state, spawn.x, spawn.y)) {
           state.water[spawnIndex] = Math.min(MAX_WATER, (state.water[spawnIndex] ?? 0) + 1);
         }
-      } else if (isEmpty(spawnCell) && getWaterAmount(state, spawn.x, spawn.y) <= MIN_WATER) {
+      } else if (
+        isEmpty(spawnCell) &&
+        !isStaticSolidCell(state, spawn.x, spawn.y) &&
+        getWaterAmount(state, spawn.x, spawn.y) <= MIN_WATER
+      ) {
         state.cells[spawnIndex] = emitter.definition.element;
       }
 
       emitter.carry -= 1;
     }
   }
+}
+
+function processHearths(state: MutableWorldState, emitFlames: boolean): void {
+  for (const hearth of state.hearths) {
+    convertWaterAtHearth(state, hearth);
+
+    if (emitFlames) {
+      emitHearthFlames(state, hearth);
+    }
+  }
+}
+
+function convertWaterAtHearth(state: MutableWorldState, hearth: HearthState): void {
+  const steamCells: GridPoint[] = [];
+
+  for (const cell of getHearthHeatCells(state, hearth.definition)) {
+    const index = toIndex(state, cell.x, cell.y);
+
+    if (state.water[index] === undefined || state.water[index] <= MIN_WATER) {
+      continue;
+    }
+
+    state.water[index] = 0;
+
+    if (isEmpty(state.cells[index] ?? EMPTY_CELL) && !isStaticSolidCell(state, cell.x, cell.y)) {
+      steamCells.push(cell);
+    }
+  }
+
+  for (const cell of steamCells) {
+    state.cells[toIndex(state, cell.x, cell.y)] = "steam";
+  }
+}
+
+function emitHearthFlames(state: MutableWorldState, hearth: HearthState): void {
+  hearth.flameCarry += hearth.definition.flameRatePerTick;
+
+  while (hearth.flameCarry >= 1) {
+    const spawn = getHearthFlameSpawnCell(state, hearth.definition);
+
+    if (spawn !== null) {
+      const index = toIndex(state, spawn.x, spawn.y);
+
+      if (
+        isEmpty(state.cells[index] ?? EMPTY_CELL) &&
+        getWaterAmount(state, spawn.x, spawn.y) <= MIN_WATER &&
+        !isStaticSolidCell(state, spawn.x, spawn.y)
+      ) {
+        state.cells[index] = "fire";
+      }
+    }
+
+    hearth.flameCarry -= 1;
+  }
+}
+
+function getHearthFlameSpawnCell(
+  state: MutableWorldState,
+  hearth: Required<HearthDefinition>,
+): GridPoint | null {
+  const x = hearth.rect.x + state.random.nextInt(hearth.rect.width);
+  const y = hearth.rect.y - 1;
+
+  if (!isInside(state, x, y)) {
+    return null;
+  }
+
+  return { x, y };
+}
+
+function getHearthHeatCells(
+  state: MutableWorldState,
+  hearth: Required<HearthDefinition>,
+): GridPoint[] {
+  const cells: GridPoint[] = [];
+  const minX = hearth.rect.x - 1;
+  const maxX = hearth.rect.x + hearth.rect.width;
+  const minY = hearth.rect.y - hearth.heatRadius;
+  const maxY = hearth.rect.y;
+
+  for (let y = minY; y <= maxY; y += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      if (isInside(state, x, y)) {
+        cells.push({ x, y });
+      }
+    }
+  }
+
+  return cells;
 }
 
 function getEmitterSpawnCell(
@@ -365,7 +504,7 @@ function processReactions(state: MutableWorldState): void {
   for (const cell of steamCells) {
     const index = toIndex(state, cell.x, cell.y);
 
-    if (!isBucketWallCell(state, cell.x, cell.y) && isEmpty(state.cells[index] ?? EMPTY_CELL)) {
+    if (!isStaticSolidCell(state, cell.x, cell.y) && isEmpty(state.cells[index] ?? EMPTY_CELL)) {
       state.cells[index] = "steam";
     }
   }
@@ -431,6 +570,11 @@ function moveSteam(state: MutableWorldState, moved: boolean[], x: number, y: num
 }
 
 function moveFire(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
+  if (y === 0) {
+    state.cells[toIndex(state, x, y)] = EMPTY_CELL;
+    return;
+  }
+
   const side = state.random.pickDirection();
   const candidates = [
     { x, y: y - 1 },
@@ -465,7 +609,7 @@ function tryMoveGasOrEnergyToFirstAvailableCell(
 
     if (
       isDiagonalCornerBlocked(state, fromX, fromY, candidate.x, candidate.y) ||
-      isBucketWallCell(state, candidate.x, candidate.y) ||
+      isStaticSolidCell(state, candidate.x, candidate.y) ||
       !isEmpty(targetCell) ||
       getWaterAmount(state, candidate.x, candidate.y) > MIN_WATER
     ) {
@@ -507,7 +651,7 @@ function tryMoveToFirstAvailableCell(
       continue;
     }
 
-    if (isBucketWallCell(state, candidate.x, candidate.y)) {
+    if (isStaticSolidCell(state, candidate.x, candidate.y)) {
       continue;
     }
 
@@ -631,10 +775,9 @@ function isDiagonalCornerBlocked(
     return false;
   }
 
-  const horizontalCorner = getCellUnchecked(state, targetX, fromY);
-  const verticalCorner = getCellUnchecked(state, fromX, targetY);
-
-  return isDrawnLine(horizontalCorner) && isDrawnLine(verticalCorner);
+  return (
+    isMovementBarrierCell(state, targetX, fromY) && isMovementBarrierCell(state, fromX, targetY)
+  );
 }
 
 function flowWater(state: MutableWorldState): void {
@@ -770,6 +913,15 @@ function createBucketSnapshots(buckets: readonly BucketState[]): BucketSnapshot[
     required: bucket.definition.required,
     settled: bucket.settled,
     target: bucket.definition.target,
+  }));
+}
+
+function createHearthSnapshots(hearths: readonly HearthState[]): HearthSnapshot[] {
+  return hearths.map((hearth) => ({
+    flameRatePerTick: hearth.definition.flameRatePerTick,
+    heatRadius: hearth.definition.heatRadius,
+    id: hearth.definition.id,
+    rect: hearth.definition.rect,
   }));
 }
 
@@ -954,7 +1106,27 @@ function canContainWater(state: MutableWorldState, x: number, y: number): boolea
     return false;
   }
 
-  return isEmpty(state.cells[toIndex(state, x, y)] ?? EMPTY_CELL) && !isBucketWallCell(state, x, y);
+  return (
+    isEmpty(state.cells[toIndex(state, x, y)] ?? EMPTY_CELL) && !isStaticSolidCell(state, x, y)
+  );
+}
+
+function isStaticSolidCell(state: MutableWorldState, x: number, y: number): boolean {
+  return isBucketWallCell(state, x, y) || isHearthSolidCell(state, x, y);
+}
+
+function isMovementBarrierCell(state: MutableWorldState, x: number, y: number): boolean {
+  return isDrawnLine(getCellUnchecked(state, x, y)) || isStaticSolidCell(state, x, y);
+}
+
+function isHearthSolidCell(state: MutableWorldState, x: number, y: number): boolean {
+  for (const hearth of state.hearths) {
+    if (isPointInRect(hearth.definition.rect, x, y)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function isBucketWallCell(state: MutableWorldState, x: number, y: number): boolean {
@@ -985,6 +1157,10 @@ function isBucketDefinitionWallCell(bucket: BucketDefinition, x: number, y: numb
   }
 
   return y === rect.y + rect.height - 1;
+}
+
+function isPointInRect(rect: GridRect, x: number, y: number): boolean {
+  return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height;
 }
 
 function getWaterAmount(state: MutableWorldState, x: number, y: number): number {
