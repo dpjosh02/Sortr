@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createSeededRandom } from "./random";
+import { createSeededRandom } from "../../src/simulation/random";
 
 describe("createSeededRandom", () => {
   it("replays the same sequence for the same seed", () => {

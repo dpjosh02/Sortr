@@ -79,11 +79,19 @@ src/
     loop.ts
     actions.ts
   simulation/
-    world.ts
-    particles.ts
+    world.ts              # public simulation facade
+    world/
+      buckets.ts
+      emittersSystem.ts
+      grid.ts
+      hearths.ts
+      index.ts
+      movement.ts
+      reactions.ts
+      solids.ts
+      types.ts
+      water.ts
     elements.ts
-    reactions.ts
-    buckets.ts
     emitters.ts
     lines.ts
     random.ts
@@ -99,8 +107,11 @@ src/
   ui/
     hud.ts
     debugOverlay.ts
-  tests/
-    testUtils.ts
+test/
+  input/
+  levels/
+  simulation/
+    worldTestHelpers.ts
 ```
 
 This structure can change if implementation proves it should, but changes must preserve the same ownership boundaries.
@@ -110,6 +121,7 @@ This structure can change if implementation proves it should, but changes must p
 - TypeScript strict mode is required.
 - Avoid `any` unless a short comment explains why it is necessary.
 - Avoid large god files. Split by responsibility once a module becomes hard to scan.
+- Production and test TypeScript files must stay under the ESLint max-lines threshold.
 - Keep functions small enough to test directly.
 - Prefer pure functions for simulation rules.
 - Do not add dependencies without a specific reason.
@@ -146,6 +158,7 @@ npm run verify
 - Reset behavior requires tests.
 - Level completion logic requires tests.
 - Renderer-only visual changes may use browser smoke tests and screenshots instead of unit tests.
+- Tests live under the top-level `test/` folder and mirror the parent source domain.
 
 ## Snapshot Workflow
 

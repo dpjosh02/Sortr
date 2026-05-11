@@ -20,5 +20,5 @@
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "eslint.config.js", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "test", "eslint.config.js", "vite.config.ts", "vitest.config.ts"]
 }

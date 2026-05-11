@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getCanvasGridPoint } from "./pointer";
+import { getCanvasGridPoint } from "../../src/input/pointer";
 
 describe("getCanvasGridPoint", () => {
   it("maps client coordinates into clamped grid coordinates", () => {

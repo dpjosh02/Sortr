@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ELEMENTS } from "../simulation/elements";
-
-import { LEVEL_CATALOG, getInitialLevel, getLevelByIndex, getNextLevelIndex } from "./levelCatalog";
+import {
+  LEVEL_CATALOG,
+  getInitialLevel,
+  getLevelByIndex,
+  getNextLevelIndex,
+} from "../../src/levels/levelCatalog";
+import { ELEMENTS } from "../../src/simulation/elements";
 
 describe("LEVEL_CATALOG", () => {
   it("contains multiple playable snapshot 4 levels", () => {

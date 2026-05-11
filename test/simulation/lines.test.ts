@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getLineCells } from "./lines";
+import { getLineCells } from "../../src/simulation/lines";
 
 describe("getLineCells", () => {
   it("returns the exact cell for a point line", () => {

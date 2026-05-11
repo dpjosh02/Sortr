@@ -49,6 +49,14 @@ export default tseslint.config(
           "newlines-between": "always",
         },
       ],
+      "max-lines": [
+        "error",
+        {
+          max: 400,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
     },
   },
 );
