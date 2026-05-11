@@ -24,9 +24,17 @@ describe("element registry", () => {
       "smoke",
       "ash",
       "glass",
+      "crystal",
     ]);
     expect(getElementsByBehavior("liquid-flow")).toEqual(["water"]);
-    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud", "ash", "glass"]);
+    expect(getElementsByBehavior("powder-fall")).toEqual([
+      "sand",
+      "dirt",
+      "mud",
+      "ash",
+      "glass",
+      "crystal",
+    ]);
     expect(getElementsByBehavior("gas-rise")).toEqual(["steam", "smoke"]);
     expect(getElementsByBehavior("energy-rise")).toEqual(["fire"]);
   });
@@ -41,6 +49,7 @@ describe("element registry", () => {
     expect(usesLiquidLayer("smoke")).toBe(false);
     expect(usesLiquidLayer("ash")).toBe(false);
     expect(usesLiquidLayer("glass")).toBe(false);
+    expect(usesLiquidLayer("crystal")).toBe(false);
   });
 
   it("keeps renderer palettes in element registry data", () => {
@@ -53,6 +62,7 @@ describe("element registry", () => {
     expect(getElementPalette("smoke")[0]).toBe("#8b8f91");
     expect(getElementPalette("ash")[0]).toBe("#6f6a62");
     expect(getElementPalette("glass")[0]).toBe("#a8d8cf");
+    expect(getElementPalette("crystal")[0]).toBe("#c9b7f2");
   });
 });
 
@@ -63,6 +73,7 @@ describe("reaction rule registry", () => {
       "fire-mud-to-steam-dirt",
       "fire-dirt-to-smoke-ash",
       "fire-sand-to-glass",
+      "steam-glass-to-crystal",
       "dirt-water-to-mud",
       "hearth-heat-water-to-steam",
     ]);
@@ -155,6 +166,26 @@ describe("reaction rule registry", () => {
         ],
         source: {
           element: "fire",
+          storage: "particle",
+        },
+      },
+      {
+        consumeNeighbor: true,
+        consumeSource: true,
+        id: "steam-glass-to-crystal",
+        kind: "neighbor-contact",
+        neighbor: {
+          element: "glass",
+          storage: "particle",
+        },
+        products: [
+          {
+            element: "crystal",
+            location: "neighbor-cell",
+          },
+        ],
+        source: {
+          element: "steam",
           storage: "particle",
         },
       },

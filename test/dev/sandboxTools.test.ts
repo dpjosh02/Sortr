@@ -22,6 +22,7 @@ describe("dev sandbox tools", () => {
     expect(getDevSandboxElementForKey("8")).toBe("ash");
     expect(getDevSandboxElementForKey("9")).toBe("glass");
     expect(getDevSandboxElementForKey("0")).toBeNull();
+    expect(getDevSandboxElementForKey("10")).toBeNull();
   });
 
   it("uses the existing plus-shaped sandbox brush stamp", () => {

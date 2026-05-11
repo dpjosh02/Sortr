@@ -340,6 +340,29 @@ User test:
 
 - Confirm the glass level reads as a chemistry-chain puzzle and does not require pixel-perfect routing.
 
+## Snapshot 15: Cool The Glass
+
+Goal: Extend the glass chain by cooling glass into crystal without adding new movement behavior or player tools.
+
+Deliverables:
+
+- `crystal` element registry entry using existing powder movement.
+- Steam + glass -> crystal reaction rule in the registry.
+- One hand-authored campaign level that teaches cooling glass with steam.
+- Tests for element registration, reaction behavior, reaction priority, fixture defaults, dev sandbox hotkeys, and level validation.
+- Documentation updated to describe the current crystal chain.
+
+Exit criteria:
+
+- Existing campaign levels still work.
+- The new level teaches one idea: route rising steam into falling glass to create crystal.
+- No new player tools, tool-like mechanics, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm the crystal level reads as a follow-up chemistry chain and not as a precision timing challenge.
+
 ## Later Milestones
 
 - Continue chemistry chain expansion: oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.

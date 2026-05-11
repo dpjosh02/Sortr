@@ -225,6 +225,41 @@ describe("world reactions and fire", () => {
     expect(countElementCells(world, "sand")).toBe(1);
   });
 
+  it("cools glass touching steam into crystal", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "steam");
+    world.setCell(2, 1, "glass");
+    world.step();
+
+    expect(countElementCells(world, "steam")).toBe(0);
+    expect(countElementCells(world, "glass")).toBe(0);
+    expect(countElementCells(world, "crystal")).toBe(1);
+  });
+
+  it("chains fire and sand into crystal when steam is already nearby", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "fire");
+    world.setCell(2, 1, "sand");
+    world.setCell(3, 1, "steam");
+    world.step();
+
+    expect(countElementCells(world, "glass")).toBe(0);
+    expect(countElementCells(world, "crystal")).toBe(1);
+    expect(countElementCells(world, "steam")).toBe(0);
+  });
+
   it("blocks falling particles with hearth solids", () => {
     const world = createWorld({
       emitters: [],

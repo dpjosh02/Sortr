@@ -75,7 +75,7 @@ Each element has a compact physical definition:
 
 Current phases:
 
-- `powder`, such as sand, dirt, mud, ash, and glass.
+- `powder`, such as sand, dirt, mud, ash, glass, and crystal.
 - `liquid`, such as water.
 - `gas`, such as steam and smoke.
 - `energy`, such as fire.
@@ -83,7 +83,7 @@ Current phases:
 Current behavior categories:
 
 - `liquid-flow`, used by water in the fractional liquid layer.
-- `powder-fall`, used by sand, dirt, mud, ash, and glass for down and down-diagonal falling.
+- `powder-fall`, used by sand, dirt, mud, ash, glass, and crystal for down and down-diagonal falling.
 - `gas-rise`, used by steam and smoke for upward drift.
 - `energy-rise`, used by fire for short-lived upward flicker.
 
@@ -236,6 +236,13 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Bucket target: yes.
 - Reaction: none in the first glass slice.
 
+### Crystal
+
+- Type: powder.
+- Direction: gravity-driven.
+- Bucket target: yes.
+- Reaction: none in the first crystal slice.
+
 ## Current Reaction Rules
 
 ### Water + Fire -> Steam
@@ -298,6 +305,15 @@ When fire contacts sand in an orthogonal or diagonal neighboring cell:
 
 Glass deliberately reuses existing powder movement so the first glass level adds a reaction outcome without adding new movement code.
 
+### Steam + Glass -> Crystal
+
+When steam contacts glass in an orthogonal or diagonal neighboring cell:
+
+- Crystal is created at the glass cell.
+- The steam and glass reactants are consumed.
+
+Crystal deliberately reuses existing powder movement. The first crystal level should teach cooling glass with steam, not a new particle behavior.
+
 ### Hearths
 
 Fire should first appear through level-authored hearth objects instead of edge emitters. A hearth:
@@ -321,8 +337,9 @@ Reaction priority should be explicit. Current priority:
 4. Fire + mud.
 5. Fire + dirt.
 6. Fire + sand.
-7. Dirt + water.
-8. Movement.
+7. Steam + glass.
+8. Dirt + water.
+9. Movement.
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 
@@ -344,6 +361,8 @@ The current registered rules are:
   cell, consuming the fire and dirt.
 - Particle fire + particle sand -> glass at the sand cell, consuming the fire
   and sand.
+- Particle steam + particle glass -> crystal at the glass cell, consuming the
+  steam and glass.
 - Particle dirt + liquid-layer water -> mud at the dirt cell, consuming the
   water and dirt.
 - Liquid-layer water in a hearth heat zone -> steam at the heated cell,
@@ -354,11 +373,16 @@ consumption, and product placement. Future chemistry chains should add registry
 rules first and only add targeted executor behavior when a reaction needs a new
 trigger shape.
 
+Neighbor contact rules run in registry order and each rule places its products
+before the next rule runs. This means a later rule can consume a product created
+earlier in the same tick. Use that deliberately for chain reactions, and add
+priority tests when a new rule could compete with an existing one.
+
 ## Drawn Line Collision
 
 Player drawing stamps line cells along the pointer path using grid-space interpolation. Lines:
 
-- Block water, sand, fire, steam, dirt, mud, smoke, ash, and glass.
+- Block water, sand, fire, steam, dirt, mud, smoke, ash, glass, and crystal.
 - Persist until reset.
 - Are not individually erasable.
 - Have no ink limit.
@@ -412,7 +436,7 @@ Performance tuning should prioritize:
 
 Core tests should cover:
 
-- Movement for water, sand, steam, dirt, mud, smoke, ash, and glass.
+- Movement for water, sand, steam, dirt, mud, smoke, ash, glass, and crystal.
 - Collision against drawn lines.
 - Emitter spawning.
 - Water + fire reaction.
@@ -420,6 +444,7 @@ Core tests should cover:
 - Fire + mud reaction.
 - Fire + dirt reaction.
 - Fire + sand reaction.
+- Steam + glass reaction.
 - Bucket matching and wrong-element non-counting behavior.
 - Reset behavior.
 - Determinism with a fixed seed and input sequence.

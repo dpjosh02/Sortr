@@ -21,6 +21,10 @@ export function isDevToolsToggleKey(key: string): boolean {
 }
 
 export function getDevSandboxElementForKey(key: string): DevSandboxElement | null {
+  if (!/^[1-9]$/.test(key)) {
+    return null;
+  }
+
   const numericToolIndex = Number(key) - 1;
 
   return DEV_SANDBOX_ELEMENTS[numericToolIndex] ?? null;

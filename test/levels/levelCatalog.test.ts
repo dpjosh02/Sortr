@@ -21,6 +21,7 @@ describe("LEVEL_CATALOG", () => {
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("008-smoke-and-ash");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("009-branching-reactions");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("010-melt-the-sand");
+    expect(LEVEL_CATALOG.map((level) => level.id)).toContain("011-cool-the-glass");
   });
 
   it("uses valid bucket definitions", () => {
@@ -142,6 +143,10 @@ describe("LEVEL_CATALOG", () => {
       {
         id: "010-melt-the-sand",
         lesson: "Heat sand into glass before guiding it to the bucket.",
+      },
+      {
+        id: "011-cool-the-glass",
+        lesson: "Cool glass with steam to create crystal.",
       },
     ]);
   });

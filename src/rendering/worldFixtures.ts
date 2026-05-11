@@ -2,11 +2,12 @@ import type { ElementType } from "../simulation/elements";
 import type { EmitterDefinition, EmitterFixtureType } from "../simulation/emitters";
 import type { HearthSnapshot, ObstacleDefinition } from "../simulation/world";
 
-import { drawGlassKiln, drawGrains, drawOutlinedRect } from "./fixtureDrawing";
+import { drawCrystalPrism, drawGlassKiln, drawGrains, drawOutlinedRect } from "./fixtureDrawing";
 
 export const DEFAULT_EMITTER_FIXTURE_BY_ELEMENT: Readonly<Record<ElementType, EmitterFixtureType>> =
   {
     ash: "ash-sifter",
+    crystal: "crystal-prism",
     dirt: "clay-chute",
     fire: "charcoal-bed",
     glass: "glass-kiln",
@@ -135,6 +136,9 @@ function drawEmitterFixture(
       return;
     case "copper-vent":
       drawCopperVent(context, bounds, options.cellSize, options.tick);
+      return;
+    case "crystal-prism":
+      drawCrystalPrism(context, bounds, options.cellSize, options.tick);
       return;
     case "glass-kiln":
       drawGlassKiln(context, bounds, options.cellSize, options.tick);

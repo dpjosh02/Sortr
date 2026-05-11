@@ -221,4 +221,43 @@ export const CHEMISTRY_LEVELS: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e4e3ec",
+    cellSize: 4,
+    designerNotes:
+      "This level links the previous glass idea to steam without adding new tools: glass falls from the left, steam rises from the right, and the crystal bucket is reachable through several meeting-point layouts.",
+    id: "011-cool-the-glass",
+    lesson: "Cool glass with steam to create crystal.",
+    title: "Cool the Glass",
+    world: {
+      buckets: [
+        {
+          id: "crystal-bucket",
+          intake: "top",
+          rect: { height: 24, width: 44, x: 96, y: 126 },
+          required: 20,
+          target: "crystal",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "glass",
+          id: "glass-source",
+          range: { end: 66, start: 60 },
+          ratePerTick: 0.45,
+        },
+        {
+          edge: "bottom",
+          element: "steam",
+          id: "steam-source",
+          range: { end: 176, start: 170 },
+          ratePerTick: 0.45,
+        },
+      ],
+      height: 160,
+      seed: 20260511,
+      width: 240,
+    },
+  },
 ];

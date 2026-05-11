@@ -10,6 +10,7 @@ describe("emitter fixtures", () => {
   it("maps each element to a distinct readable fixture by default", () => {
     expect(DEFAULT_EMITTER_FIXTURE_BY_ELEMENT).toEqual({
       ash: "ash-sifter",
+      crystal: "crystal-prism",
       dirt: "clay-chute",
       fire: "charcoal-bed",
       glass: "glass-kiln",

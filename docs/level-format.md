@@ -77,6 +77,7 @@ MVP emitters are continuous. `ratePerTick` may be fractional; emitter state carr
 - `smoke`: soot vent.
 - `ash`: ash sifter.
 - `glass`: glass kiln.
+- `crystal`: crystal prism.
 
 ## Buckets
 
@@ -239,6 +240,13 @@ otherwise unlocked levels, not skipping ahead through the campaign by default.
 - Fixed hearth.
 - Glass bucket.
 - Open space lets players choose how to move sand through heat before catching the glass.
+
+### 011-cool-the-glass
+
+- Teaches the first crystal reaction.
+- Glass emitter and steam emitter.
+- Crystal bucket.
+- Open space lets players choose where falling glass and rising steam meet.
 
 ## Level Validation
 

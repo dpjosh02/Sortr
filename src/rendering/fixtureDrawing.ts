@@ -56,3 +56,37 @@ export function drawGlassKiln(
   context.fillStyle = tick % 8 < 4 ? "#d7f0ea" : "#a8d8cf";
   context.fillRect(bounds.centerX - cellSize / 2, bounds.y + cellSize * 4, cellSize, cellSize);
 }
+
+export function drawCrystalPrism(
+  context: CanvasRenderingContext2D,
+  bounds: DrawableFixtureBounds,
+  cellSize: number,
+  tick: number,
+): void {
+  const pulse = tick % 12 < 6 ? "#f1ecff" : "#c9b7f2";
+
+  drawOutlinedRect(
+    context,
+    bounds.centerX - cellSize * 2,
+    bounds.y + cellSize * 3,
+    cellSize * 4,
+    cellSize,
+    "#7f6fb0",
+  );
+  context.fillStyle = "#111111";
+  context.beginPath();
+  context.moveTo(bounds.centerX, bounds.y + cellSize);
+  context.lineTo(bounds.centerX + cellSize * 1.5, bounds.y + cellSize * 3);
+  context.lineTo(bounds.centerX, bounds.y + cellSize * 4);
+  context.lineTo(bounds.centerX - cellSize * 1.5, bounds.y + cellSize * 3);
+  context.closePath();
+  context.fill();
+  context.fillStyle = pulse;
+  context.beginPath();
+  context.moveTo(bounds.centerX, bounds.y + cellSize * 1.5);
+  context.lineTo(bounds.centerX + cellSize, bounds.y + cellSize * 3);
+  context.lineTo(bounds.centerX, bounds.y + cellSize * 3.5);
+  context.lineTo(bounds.centerX - cellSize, bounds.y + cellSize * 3);
+  context.closePath();
+  context.fill();
+}
