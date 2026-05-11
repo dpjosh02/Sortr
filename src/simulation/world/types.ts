@@ -10,6 +10,7 @@ export interface WorldDefinition {
   readonly emitters: readonly EmitterDefinition[];
   readonly buckets?: readonly BucketDefinition[];
   readonly hearths?: readonly HearthDefinition[];
+  readonly obstacles?: readonly ObstacleDefinition[];
 }
 
 export interface GridRect {
@@ -34,6 +35,24 @@ export interface HearthDefinition {
   readonly heatRadius?: number;
 }
 
+export type ObstacleDefinition =
+  | {
+      readonly id: string;
+      readonly kind: "solid-line";
+      readonly line: {
+        readonly x1: number;
+        readonly y1: number;
+        readonly x2: number;
+        readonly y2: number;
+        readonly thickness: number;
+      };
+    }
+  | {
+      readonly id: string;
+      readonly kind: "solid-rect";
+      readonly rect: GridRect;
+    };
+
 export interface ParticleCount {
   readonly element: ElementType;
   readonly count: number;
@@ -48,6 +67,7 @@ export interface WorldSnapshot {
   readonly fireLife: readonly number[];
   readonly buckets: readonly BucketSnapshot[];
   readonly hearths: readonly HearthSnapshot[];
+  readonly obstacles: readonly ObstacleDefinition[];
   readonly isComplete: boolean;
   readonly particleCounts: readonly ParticleCount[];
 }
@@ -92,6 +112,8 @@ export interface MutableWorldState {
   readonly emitters: EmitterState[];
   readonly buckets: BucketState[];
   readonly hearths: HearthState[];
+  readonly obstacles: readonly ObstacleDefinition[];
+  readonly staticSolids: ReadonlySet<number>;
   tick: number;
 }
 

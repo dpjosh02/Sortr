@@ -101,4 +101,41 @@ describe("world collision", () => {
     expect(world.snapshot().particleCounts).toEqual([]);
     expect(world.getCell(1, 0)).toBe(-1);
   });
+
+  it("blocks particles and water with level-authored solid obstacles", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      obstacles: [
+        {
+          id: "floor",
+          kind: "solid-rect",
+          rect: {
+            height: 1,
+            width: 3,
+            x: 0,
+            y: 2,
+          },
+        },
+      ],
+      seed: 1,
+      width: 3,
+    });
+
+    world.setCell(1, 0, "sand");
+    world.setCell(0, 1, "water");
+
+    for (let tick = 0; tick < 4; tick += 1) {
+      world.step();
+    }
+
+    const snapshot = world.snapshot();
+    const waterTotal = snapshot.water.reduce((total, amount) => total + amount, 0);
+
+    expect(world.getCell(1, 1)).toBe("sand");
+    expect(waterTotal).toBeGreaterThan(0);
+    expect(snapshot.water[2 * world.width + 0]).toBe(0);
+    expect(snapshot.water[2 * world.width + 1]).toBe(0);
+    expect(snapshot.water[2 * world.width + 2]).toBe(0);
+  });
 });

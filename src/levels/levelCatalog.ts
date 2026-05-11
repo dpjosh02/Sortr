@@ -191,6 +191,102 @@ export const LEVEL_CATALOG: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e1e8df",
+    cellSize: 4,
+    id: "005-crossing-paths",
+    title: "Crossing Paths",
+    world: {
+      buckets: [
+        {
+          id: "water-bucket",
+          intake: "top",
+          rect: {
+            height: 22,
+            width: 28,
+            x: 28,
+            y: 128,
+          },
+          required: 38,
+          target: "water",
+        },
+        {
+          id: "steam-bucket",
+          intake: "bottom",
+          rect: {
+            height: 24,
+            width: 30,
+            x: 176,
+            y: 18,
+          },
+          required: 18,
+          target: "steam",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "water",
+          id: "water-source",
+          range: {
+            end: 73,
+            start: 67,
+          },
+          ratePerTick: 0.7,
+        },
+      ],
+      hearths: [
+        {
+          heatRadius: 3,
+          id: "right-hearth",
+          rect: {
+            height: 4,
+            width: 12,
+            x: 166,
+            y: 144,
+          },
+        },
+      ],
+      height: 160,
+      obstacles: [
+        {
+          id: "upper-shelf",
+          kind: "solid-line",
+          line: {
+            thickness: 2,
+            x1: 86,
+            x2: 142,
+            y1: 54,
+            y2: 54,
+          },
+        },
+        {
+          id: "center-baffle",
+          kind: "solid-line",
+          line: {
+            thickness: 2,
+            x1: 128,
+            x2: 100,
+            y1: 72,
+            y2: 118,
+          },
+        },
+        {
+          id: "lower-shelf",
+          kind: "solid-line",
+          line: {
+            thickness: 2,
+            x1: 94,
+            x2: 164,
+            y1: 126,
+            y2: 126,
+          },
+        },
+      ],
+      seed: 20260510,
+      width: 240,
+    },
+  },
 ];
 
 export function getInitialLevel(): LevelDefinition {

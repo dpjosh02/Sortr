@@ -5,7 +5,12 @@ import {
   isDrawnLine,
   isElement,
 } from "../simulation/elements";
-import { FIRE_TTL, type HearthSnapshot, type WorldSnapshot } from "../simulation/world";
+import {
+  FIRE_TTL,
+  type HearthSnapshot,
+  type ObstacleDefinition,
+  type WorldSnapshot,
+} from "../simulation/world";
 
 export interface CanvasRenderer {
   clear(background: string): void;
@@ -81,6 +86,10 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
             options.cellSize,
           );
         }
+      }
+
+      for (const obstacle of snapshot.obstacles) {
+        drawObstacle(context, obstacle, options.cellSize);
       }
 
       for (const bucket of snapshot.buckets) {
@@ -214,4 +223,30 @@ function drawHearth(
     flameWidth,
     cellSize * 2,
   );
+}
+
+function drawObstacle(
+  context: CanvasRenderingContext2D,
+  obstacle: ObstacleDefinition,
+  cellSize: number,
+): void {
+  context.fillStyle = "#111111";
+
+  if (obstacle.kind === "solid-rect") {
+    context.fillRect(
+      obstacle.rect.x * cellSize,
+      obstacle.rect.y * cellSize,
+      obstacle.rect.width * cellSize,
+      obstacle.rect.height * cellSize,
+    );
+    return;
+  }
+
+  context.strokeStyle = "#111111";
+  context.lineCap = "square";
+  context.lineWidth = Math.max(cellSize, obstacle.line.thickness * cellSize);
+  context.beginPath();
+  context.moveTo(obstacle.line.x1 * cellSize, obstacle.line.y1 * cellSize);
+  context.lineTo(obstacle.line.x2 * cellSize, obstacle.line.y2 * cellSize);
+  context.stroke();
 }

@@ -29,7 +29,7 @@ import {
 import { createHearthSnapshots, createHearthState, processHearths } from "./hearths";
 import { ageFireParticles, moveParticles } from "./movement";
 import { processReactions } from "./reactions";
-import { isHearthSolidCell, isStaticSolidCell } from "./solids";
+import { createStaticSolidCells, isHearthSolidCell, isStaticSolidCell } from "./solids";
 import {
   FIRE_TTL,
   MAX_WATER,
@@ -49,6 +49,7 @@ export type {
   GridRect,
   HearthDefinition,
   HearthSnapshot,
+  ObstacleDefinition,
   ParticleCount,
   World,
   WorldDefinition,
@@ -67,7 +68,9 @@ export function createWorld(definition: WorldDefinition): World {
     fireLife: Array<number>(definition.width * definition.height).fill(0),
     height: definition.height,
     hearths: definition.hearths?.map(createHearthState) ?? [],
+    obstacles: definition.obstacles ?? [],
     random: createSeededRandom(definition.seed),
+    staticSolids: createStaticSolidCells(definition),
     tick: 0,
     water: Array<number>(definition.width * definition.height).fill(0),
     width: definition.width,
@@ -203,6 +206,7 @@ function createSnapshot(state: MutableWorldState): WorldSnapshot {
     hearths: createHearthSnapshots(state.hearths),
     height: state.height,
     isComplete: isWorldComplete(state),
+    obstacles: state.obstacles,
     particleCounts: countParticles(state),
     tick: state.tick,
     water: [...state.water],
