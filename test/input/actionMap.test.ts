@@ -3,9 +3,8 @@ import { describe, expect, it } from "vitest";
 import { createActionMap } from "../../src/input/actionMap";
 
 describe("createActionMap", () => {
-  it("maps reset and debug keyboard actions explicitly", () => {
+  it("maps only player-facing keyboard actions", () => {
     expect(createActionMap().keyboard).toEqual({
-      d: "toggle-debug",
       r: "reset",
     });
   });

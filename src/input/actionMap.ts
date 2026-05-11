@@ -1,4 +1,4 @@
-export type GameAction = "reset" | "toggle-debug";
+export type GameAction = "reset";
 
 export interface ActionMap {
   keyboard: Readonly<Record<string, GameAction>>;
@@ -7,7 +7,6 @@ export interface ActionMap {
 export function createActionMap(): ActionMap {
   return {
     keyboard: {
-      d: "toggle-debug",
       r: "reset",
     },
   };

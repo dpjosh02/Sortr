@@ -17,6 +17,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   min-width: 320px;
   min-height: 100vh;
@@ -55,7 +59,8 @@ button[aria-pressed] {
   background: #1a1a16;
 }
 
-#app {
+#app,
+.app-root {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -88,14 +93,20 @@ button[aria-pressed] {
   max-width: 180px;
 }
 
-.brush-palette {
+.dev-brush-palette {
   display: flex;
   align-items: center;
   gap: 4px;
   padding-right: 8px;
 }
 
-.brush-palette button {
+.dev-brush-palette__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.dev-brush-palette button {
   min-width: 58px;
 }
 
