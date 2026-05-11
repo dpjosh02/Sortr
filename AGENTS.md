@@ -14,6 +14,7 @@ Work should be evaluated through these specialties, even when one person or agen
 
 - Owns player goals, MVP scope, milestone boundaries, and acceptance criteria.
 - Prevents scope creep.
+- Protects the MVP as a linear soft cozy alchemy puzzle campaign, not an open-ended sandbox.
 - Requires a user-test checkpoint before expanding the feature set.
 
 ### Game Designer
@@ -21,6 +22,8 @@ Work should be evaluated through these specialties, even when one person or agen
 - Owns element unlock order, level progression, puzzle constraints, and fun.
 - Ensures levels support creative emergent solutions.
 - Avoids pixel-perfect solutions unless deliberately introduced as a challenge later.
+- Keeps MVP levels focused on one major lesson and quick 1-3 minute solves.
+- Treats permanent black-line drawing as the only normal player tool for MVP.
 
 ### Simulation Expert
 
@@ -33,17 +36,20 @@ Work should be evaluated through these specialties, even when one person or agen
 - Owns boundaries between simulation, rendering, input, level data, UI, and persistence.
 - Prevents gameplay rules from leaking into renderer or DOM code.
 - Keeps saveable state serializable.
+- Keeps player-facing input separate from dev-only sandbox and debug tools.
 
 ### Frontend / Renderer Specialist
 
 - Owns Canvas rendering, pixel-art readability, pointer drawing, responsive layout, and HUD integration.
 - Keeps the canvas focused on the playfield.
 - Uses DOM for buttons, menus, debug UI, and text-heavy interfaces.
+- Labels or groups sandbox brushes as temporary dev/playtesting controls rather than core gameplay controls.
 
 ### Content Designer
 
 - Owns hand-authored levels, bucket placement, emitter placement, obstacles, and tutorial pacing.
 - Documents the intended lesson of each level without requiring a single intended solution.
+- Designs campaign levels for linear progression, readable alchemy goals, and multiple non-pixel-perfect solutions.
 
 ### QA Reviewer / Integrator
 
@@ -61,8 +67,9 @@ Work should be evaluated through these specialties, even when one person or agen
 
 - Simulation owns particles, reactions, buckets, emitters, obstacles, drawn-line collision cells, timers, level completion, and reset state.
 - Renderer owns Canvas drawing and animation presentation only.
-- Input mapping owns pointer and keyboard events and converts them into game actions.
-- UI owns DOM controls, level selection, debug panels, and completion overlays.
+- Input mapping owns pointer and keyboard events and converts them into game actions. Normal player input is permanent black-line drawing only.
+- UI owns DOM controls, debug panels, and completion overlays. MVP progression is linear next-level flow; level select is later scope for replaying beaten or unlocked levels.
+- Dev sandbox brushes may exist temporarily for tuning and playtesting, but they must remain isolated from core player gameplay and must not define puzzle requirements.
 - Level data must be declarative and separate from engine logic.
 - Tests should target simulation behavior without requiring the browser.
 

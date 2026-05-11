@@ -4,6 +4,8 @@
 
 Sortr should be built in small playable snapshots. Each snapshot should introduce a focused feature set, pass verification, and stop for user testing before the next major feature group.
 
+The MVP direction is a soft cozy alchemy puzzle campaign, not an open-ended sandbox. Normal player input is permanent black-line drawing only. Sandbox brushes may remain during development as dev/playtesting tools, but they should not define player-facing progression or level requirements.
+
 ## Snapshot 0: Planning
 
 Goal: Align on product, architecture, simulation model, level format, roles, and quality gates.
@@ -104,7 +106,7 @@ Deliverables:
 - Pure element intake logic.
 - Completion state.
 - Next-level transition placeholder.
-- Tests for matching, wrong-element rejection, and completion.
+- Tests for matching, wrong-element non-counting, and completion.
 
 Exit criteria:
 
@@ -138,29 +140,59 @@ User test:
 
 - Confirm the reaction feels intuitive and creates interesting routing decisions.
 
-## Snapshot 6: First Level Pack
+## Snapshot 6: Campaign Flow And First Level Pack
 
-Goal: Build the first cohesive playable slice.
+Goal: Build the first cohesive campaign slice with quick 1-3 minute levels and linear next-level progression.
 
 Deliverables:
 
 - 3-5 hand-authored levels.
-- Basic level select or next-level flow.
+- Documented level lessons and designer notes.
+- Linear next-level flow.
+- Completion overlay or next-level action.
+- Bucket behavior where wrong elements do not count but do not fail or contaminate the bucket.
 - Debug overlay.
+- Temporary dev/playtesting sandbox brushes isolated from normal player controls.
 - Browser smoke test if Playwright has been added.
 
 Exit criteria:
 
 - The MVP loop is playable from first level through final available level.
+- Each level teaches one major idea and supports multiple non-pixel-perfect solutions.
 - Performance is acceptable on desktop.
+- `npm run verify` passes.
 - User can test and give design feedback.
+
+User test:
+
+- Confirm the campaign reads as soft cozy alchemy, each puzzle is understandable, and normal gameplay feels like black-line drawing rather than sandbox spawning.
+
+## Snapshot 7: MVP Stabilization And Maintainability
+
+Goal: Stabilize the playable foundation before expanding the chemistry catalog.
+
+Deliverables:
+
+- Clear boundaries between game lifecycle, UI, input, rendering, level data, and simulation.
+- Registry-driven element metadata and reaction rules where they reduce future maintenance cost.
+- Validation tests for levels, progression, buckets, reactions, and reset behavior.
+- Dev/debug tools clearly separated from player-facing UI.
+- Documentation updated to match implementation.
+
+Exit criteria:
+
+- `npm run verify` passes.
+- Existing five levels still work.
+- No new elements or puzzle mechanics are added during this stabilization slice.
+- User-test feedback from Snapshot 6 is triaged before chemistry expansion.
 
 ## Later Milestones
 
-- Dirt and mud.
-- Smoke and ash.
-- Acid and line erosion.
-- Filters and temperature zones.
+- Chemistry chain expansion first: dirt and mud, smoke and ash, oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.
+- Additional campaign levels that teach one new chemistry idea at a time.
+- Level select for replaying beaten or otherwise unlocked levels.
+- Challenge objectives or optional mastery goals.
+- Tool-like mechanics after chemistry chains: acid and line erosion, filters, temperature zones, erasers, or special player tools.
 - Level editor.
 - Save/progression state.
 - Audio and polish.
@@ -171,4 +203,7 @@ Exit criteria:
 - Did simulation behavior get tests?
 - Did lint, typecheck, and tests pass?
 - Is the simulation still separate from rendering?
+- Does player-facing input remain black-line drawing only unless a milestone explicitly changes it?
+- Are sandbox brushes/debug controls isolated from core gameplay?
+- Does the change preserve the linear campaign direction?
 - Is the user prompted to test before moving on?
