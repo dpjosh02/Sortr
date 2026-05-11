@@ -16,6 +16,7 @@ import {
   isWorldComplete,
   processBuckets,
 } from "./buckets";
+import { moveCompletionCollapse, startCompletionCollapse } from "./collapse";
 import { spawnFromEmitters } from "./emittersSystem";
 import {
   assertPositiveInteger,
@@ -35,6 +36,7 @@ import {
   MAX_WATER,
   MIN_WATER,
   PRESSURE_DISPLACEMENT_SEARCH_RADIUS,
+  type CollapseCell,
   type MutableWorldState,
   type ParticleCount,
   type World,
@@ -46,6 +48,7 @@ import { displaceWaterForSolid } from "./water";
 export type {
   BucketDefinition,
   BucketSnapshot,
+  CollapseCell,
   GridRect,
   HearthDefinition,
   HearthSnapshot,
@@ -64,12 +67,14 @@ export function createWorld(definition: WorldDefinition): World {
   const state: MutableWorldState = {
     buckets: definition.buckets?.map(createBucketState) ?? [],
     cells: Array<CellValue>(definition.width * definition.height).fill(EMPTY_CELL),
+    collapseCells: Array<0>(definition.width * definition.height).fill(EMPTY_CELL),
     emitters: definition.emitters.map(createEmitterState),
     fireLife: Array<number>(definition.width * definition.height).fill(0),
     height: definition.height,
     hearths: definition.hearths?.map(createHearthState) ?? [],
     obstacles: definition.obstacles ?? [],
     random: createSeededRandom(definition.seed),
+    isComplete: false,
     staticSolids: createStaticSolidCells(definition),
     tick: 0,
     water: Array<number>(definition.width * definition.height).fill(0),
@@ -87,9 +92,17 @@ export function createWorld(definition: WorldDefinition): World {
       return state.width;
     },
     addElementCell(x: number, y: number, element): void {
+      if (state.isComplete) {
+        return;
+      }
+
       addElementCell(state, x, y, element);
     },
     addLineCell(x: number, y: number): void {
+      if (state.isComplete) {
+        return;
+      }
+
       addLineCell(state, x, y);
     },
     addLineSegment(start, end): void {
@@ -102,15 +115,29 @@ export function createWorld(definition: WorldDefinition): World {
         return EMPTY_CELL;
       }
 
+      if (state.isComplete) {
+        return getCollapseVisibleCell(state, x, y);
+      }
+
       return getVisibleCell(state, x, y);
     },
     setCell(x: number, y: number, value: CellValue): void {
+      if (state.isComplete) {
+        return;
+      }
+
       setCell(state, x, y, value);
     },
     snapshot(): WorldSnapshot {
       return createSnapshot(state);
     },
     step(): void {
+      if (state.isComplete) {
+        moveCompletionCollapse(state);
+        state.tick += 1;
+        return;
+      }
+
       spawnFromEmitters(state);
       processHearths(state, true);
       processBuckets(state);
@@ -119,6 +146,13 @@ export function createWorld(definition: WorldDefinition): World {
       ageFireParticles(state);
       processHearths(state, false);
       processBuckets(state);
+
+      if (isWorldComplete(state)) {
+        state.isComplete = true;
+        startCompletionCollapse(state);
+        moveCompletionCollapse(state);
+      }
+
       state.tick += 1;
     },
   };
@@ -202,10 +236,12 @@ function createSnapshot(state: MutableWorldState): WorldSnapshot {
   return {
     buckets: createBucketSnapshots(state.buckets),
     cells: [...state.cells],
+    collapseCells: [...state.collapseCells],
     fireLife: [...state.fireLife],
     hearths: createHearthSnapshots(state.hearths),
     height: state.height,
-    isComplete: isWorldComplete(state),
+    isCollapseActive: state.isComplete,
+    isComplete: state.isComplete || isWorldComplete(state),
     obstacles: state.obstacles,
     particleCounts: countParticles(state),
     tick: state.tick,
@@ -216,6 +252,16 @@ function createSnapshot(state: MutableWorldState): WorldSnapshot {
 
 function countParticles(state: MutableWorldState): ParticleCount[] {
   const counts = new Map<ElementType, number>();
+
+  if (state.isComplete) {
+    for (const cell of state.collapseCells) {
+      if (isCollapseElement(cell)) {
+        counts.set(cell, (counts.get(cell) ?? 0) + 1);
+      }
+    }
+
+    return createParticleCountList(counts);
+  }
 
   for (const cell of state.cells) {
     if (!isElement(cell)) {
@@ -231,7 +277,25 @@ function countParticles(state: MutableWorldState): ParticleCount[] {
     counts.set("water", waterCells);
   }
 
+  return createParticleCountList(counts);
+}
+
+function createParticleCountList(counts: Map<ElementType, number>): ParticleCount[] {
   return [...counts.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([element, count]) => ({ count, element }));
+}
+
+function getCollapseVisibleCell(state: MutableWorldState, x: number, y: number): CellValue {
+  const collapseCell = state.collapseCells[toIndex(state, x, y)] ?? EMPTY_CELL;
+
+  if (isCollapseElement(collapseCell)) {
+    return collapseCell;
+  }
+
+  return collapseCell === "solid" ? DRAWN_LINE_CELL : EMPTY_CELL;
+}
+
+function isCollapseElement(cell: CollapseCell): cell is ElementType {
+  return cell !== EMPTY_CELL && cell !== "solid";
 }

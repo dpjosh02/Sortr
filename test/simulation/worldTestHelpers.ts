@@ -1,4 +1,5 @@
 import { createWorld } from "../../src/simulation/world";
+import type { CollapseCell } from "../../src/simulation/world";
 
 export function totalWater(world: ReturnType<typeof createWorld>): number {
   return world.snapshot().water.reduce((total, amount) => total + amount, 0);
@@ -34,4 +35,17 @@ export function waterCellCount(world: ReturnType<typeof createWorld>): number {
 
 export function countElementCells(world: ReturnType<typeof createWorld>, element: string): number {
   return world.snapshot().cells.filter((cell) => cell === element).length;
+}
+
+export function countCollapseCells(
+  world: ReturnType<typeof createWorld>,
+  material?: CollapseCell,
+): number {
+  const cells = world.snapshot().collapseCells;
+
+  if (material === undefined) {
+    return cells.filter((cell) => cell !== 0).length;
+  }
+
+  return cells.filter((cell) => cell === material).length;
 }

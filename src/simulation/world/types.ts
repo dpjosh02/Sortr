@@ -68,9 +68,13 @@ export interface WorldSnapshot {
   readonly buckets: readonly BucketSnapshot[];
   readonly hearths: readonly HearthSnapshot[];
   readonly obstacles: readonly ObstacleDefinition[];
+  readonly collapseCells: readonly CollapseCell[];
+  readonly isCollapseActive: boolean;
   readonly isComplete: boolean;
   readonly particleCounts: readonly ParticleCount[];
 }
+
+export type CollapseCell = 0 | ElementType | "solid";
 
 export interface BucketSnapshot {
   readonly id: string;
@@ -114,6 +118,8 @@ export interface MutableWorldState {
   readonly hearths: HearthState[];
   readonly obstacles: readonly ObstacleDefinition[];
   readonly staticSolids: ReadonlySet<number>;
+  readonly collapseCells: CollapseCell[];
+  isComplete: boolean;
   tick: number;
 }
 

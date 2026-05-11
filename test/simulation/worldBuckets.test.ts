@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { EMPTY_CELL } from "../../src/simulation/elements";
 import { createWorld } from "../../src/simulation/world";
 
-import { countElementCells, totalWater } from "./worldTestHelpers";
+import { countCollapseCells } from "./worldTestHelpers";
 
 describe("world buckets", () => {
   it("counts steam settled inside matching buckets", () => {
@@ -33,7 +32,8 @@ describe("world buckets", () => {
 
     expect(world.snapshot().buckets[0]?.accepted).toBe(1);
     expect(world.snapshot().isComplete).toBe(true);
-    expect(world.getCell(2, 0)).toBe("steam");
+    expect(world.snapshot().isCollapseActive).toBe(true);
+    expect(countCollapseCells(world, "steam")).toBe(1);
   });
 
   it("counts matching material that physically settles inside a bucket", () => {
@@ -69,9 +69,8 @@ describe("world buckets", () => {
     expect(snapshot.buckets[0]?.accepted).toBe(2);
     expect(snapshot.buckets[0]?.settled).toBe(2);
     expect(snapshot.isComplete).toBe(true);
-    expect(countElementCells(world, "sand")).toBe(2);
-    expect(world.getCell(2, 3)).toBe("sand");
-    expect(world.getCell(3, 3)).toBe("sand");
+    expect(snapshot.isCollapseActive).toBe(true);
+    expect(countCollapseCells(world, "sand")).toBe(2);
   });
 
   it("rejects wrong bucket elements without counting them", () => {
@@ -132,7 +131,8 @@ describe("world buckets", () => {
 
     expect(world.snapshot().buckets[0]?.accepted).toBeGreaterThan(1.9);
     expect(world.snapshot().isComplete).toBe(true);
-    expect(totalWater(world)).toBeCloseTo(2);
+    expect(world.snapshot().isCollapseActive).toBe(true);
+    expect(countCollapseCells(world, "water")).toBeGreaterThan(0);
   });
 
   it("blocks materials from entering bucket sides and bottom", () => {
@@ -196,8 +196,8 @@ describe("world buckets", () => {
 
     const snapshot = world.snapshot();
     expect(snapshot.buckets[0]?.accepted).toBe(1);
-    expect([world.getCell(2, 1), world.getCell(2, 2), world.getCell(2, 3)]).toContain("steam");
-    expect(world.snapshot().isComplete).toBe(true);
-    expect(world.getCell(2, 0)).toBe(EMPTY_CELL);
+    expect(snapshot.isComplete).toBe(true);
+    expect(snapshot.isCollapseActive).toBe(true);
+    expect(countCollapseCells(world, "steam")).toBe(1);
   });
 });

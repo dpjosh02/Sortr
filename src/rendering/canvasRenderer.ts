@@ -7,6 +7,7 @@ import {
 } from "../simulation/elements";
 import {
   FIRE_TTL,
+  type CollapseCell,
   type HearthSnapshot,
   type ObstacleDefinition,
   type WorldSnapshot,
@@ -45,6 +46,12 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
     drawWorld(snapshot: WorldSnapshot, options: WorldRenderOptions): void {
       context.fillStyle = options.background;
       context.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (snapshot.isCollapseActive) {
+        drawCollapseWorld(context, snapshot, options);
+        drawCompletionText(context, canvas.width, options.cellSize);
+        return;
+      }
 
       for (let y = 0; y < snapshot.height; y += 1) {
         for (let x = 0; x < snapshot.width; x += 1) {
@@ -133,6 +140,113 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
       }
     },
   };
+}
+
+function drawCollapseWorld(
+  context: CanvasRenderingContext2D,
+  snapshot: WorldSnapshot,
+  options: WorldRenderOptions,
+): void {
+  for (let y = 0; y < snapshot.height; y += 1) {
+    for (let x = 0; x < snapshot.width; x += 1) {
+      const index = y * snapshot.width + x;
+      const cell = snapshot.collapseCells[index] ?? EMPTY_CELL;
+
+      if (cell === EMPTY_CELL) {
+        continue;
+      }
+
+      context.fillStyle = getCollapseCellColor(cell, x, y);
+      context.fillRect(
+        x * options.cellSize,
+        y * options.cellSize,
+        options.cellSize,
+        options.cellSize,
+      );
+    }
+  }
+}
+
+function getCollapseCellColor(cell: CollapseCell, x: number, y: number): string {
+  if (cell === "solid") {
+    return "#111111";
+  }
+
+  if (cell === EMPTY_CELL) {
+    return "#000000";
+  }
+
+  return getParticleColor(cell, x, y, FIRE_TTL);
+}
+
+function drawCompletionText(
+  context: CanvasRenderingContext2D,
+  canvasWidth: number,
+  cellSize: number,
+): void {
+  const text = "Sortd!";
+  const scale = Math.max(2, Math.floor(cellSize * 1.5));
+  const letterGap = scale;
+  const width = getPixelTextWidth(text, scale, letterGap);
+  let cursorX = Math.floor((canvasWidth - width) / 2);
+  const y = cellSize * 5;
+
+  context.fillStyle = "#111111";
+
+  for (const character of text) {
+    const glyph = COMPLETION_GLYPHS[character];
+
+    if (glyph === undefined) {
+      cursorX += scale * 4;
+      continue;
+    }
+
+    drawGlyph(context, glyph, cursorX, y, scale);
+    cursorX += getGlyphWidth(glyph) * scale + letterGap;
+  }
+}
+
+const COMPLETION_GLYPHS: Readonly<Record<string, readonly string[]>> = {
+  "!": ["1", "1", "1", "1", "1", "0", "1"],
+  S: ["1111", "1000", "1000", "1110", "0001", "0001", "1110"],
+  d: ["0001", "0001", "0111", "1001", "1001", "1001", "0111"],
+  o: ["0000", "0110", "1001", "1001", "1001", "1001", "0110"],
+  r: ["0000", "1010", "1101", "1000", "1000", "1000", "1000"],
+  t: ["0100", "0100", "1110", "0100", "0100", "0100", "0010"],
+};
+
+function getPixelTextWidth(text: string, scale: number, letterGap: number): number {
+  let width = 0;
+
+  for (const character of text) {
+    const glyph = COMPLETION_GLYPHS[character];
+    width += glyph === undefined ? scale * 4 : getGlyphWidth(glyph) * scale;
+    width += letterGap;
+  }
+
+  return Math.max(0, width - letterGap);
+}
+
+function getGlyphWidth(glyph: readonly string[]): number {
+  return glyph[0]?.length ?? 0;
+}
+
+function drawGlyph(
+  context: CanvasRenderingContext2D,
+  glyph: readonly string[],
+  x: number,
+  y: number,
+  scale: number,
+): void {
+  for (let row = 0; row < glyph.length; row += 1) {
+    const line = glyph[row] ?? "";
+
+    for (let column = 0; column < line.length; column += 1) {
+      if (line[column] === "1") {
+        context.fillRect(x + column * scale, y + row * scale, scale, scale);
+      }
+    }
+  }
 }
 
 function getBucketFillColor(element: keyof typeof ELEMENT_PALETTE): string {

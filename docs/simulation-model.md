@@ -39,6 +39,8 @@ Each tick should:
 
 The exact ordering can be revised if tests prove another order gives better gameplay, but the order must remain explicit and documented.
 
+When all bucket goals complete, the world latches into a completion-collapse state. Emitters stop immediately. The current particle grid, water layer, drawn lines, static obstacles, hearths, and bucket walls are converted into a separate non-reactive collapse grid. Every occupied collapse cell then behaves like sand: it falls down, then down-diagonal, collides with other collapse cells, and preserves its original display color. Static geometry becomes black collapse grains. Normal reactions, water flow, fire aging, bucket processing, and new drawing/spawning are disabled during this state.
+
 ## Determinism
 
 The simulation must be deterministic for a given:
