@@ -69,6 +69,9 @@ Each element has a compact physical definition:
 
 - Phase.
 - Density.
+- Behavior category.
+- Storage model.
+- Palette.
 
 MVP phases:
 
@@ -76,6 +79,17 @@ MVP phases:
 - `liquid`, such as water.
 - `gas`, such as steam.
 - `energy`, such as fire.
+
+Current behavior categories:
+
+- `liquid-flow`, used by water in the fractional liquid layer.
+- `powder-fall`, used by sand for down and down-diagonal falling.
+- `gas-rise`, used by steam for upward drift.
+- `energy-rise`, used by fire for short-lived upward flicker.
+
+The element registry is the source of truth for these properties. Adding a future
+element should start with registry data. Only add targeted behavior code when the
+new element cannot use an existing category.
 
 Density determines whether one element can displace another. A denser moving particle may displace a less-dense liquid by moving into that liquid's occupied space and redistributing the liquid volume into nearby connected liquid capacity.
 
@@ -233,6 +247,26 @@ Reaction priority should be explicit. MVP priority:
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 
+Current reactions are declared in a small rule registry:
+
+- Neighbor contact rules define a particle `source`, a neighboring reactant,
+  which reactants are consumed, and one or more products placed at the source or
+  neighbor cell.
+- Hearth heat rules define a reactant inside the heat zone, whether it is
+  consumed, and one or more products placed at the heated cell.
+
+The current registered rules are:
+
+- Liquid-layer water + particle fire -> steam at the fire cell, consuming the
+  water and fire.
+- Liquid-layer water in a hearth heat zone -> steam at the heated cell,
+  consuming the water.
+
+Reaction execution uses shared storage-aware helpers for participant lookup,
+consumption, and product placement. Future chemistry chains should add registry
+rules first and only add targeted executor behavior when a reaction needs a new
+trigger shape.
+
 ## Drawn Line Collision
 
 Player drawing stamps line cells along the pointer path using grid-space interpolation. Lines:
@@ -243,7 +277,7 @@ Player drawing stamps line cells along the pointer path using grid-space interpo
 - Have no ink limit.
 - May be dissolved by acid later.
 
-During sandbox tuning, the toolbar exposes line plus every element registered in `ELEMENTS`. Element brushes add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid. New elements should be added to the registry first so they automatically become sandbox spawn options.
+Normal player-facing MVP input is black-line drawing only. During development and playtesting, debug UI may expose sandbox brushes for every element registered in `ELEMENTS`. These brushes are temporary dev tools; they add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid, but they must not be required by campaign levels.
 
 ## Bucket Logic
 
@@ -259,7 +293,8 @@ Buckets track:
 For MVP:
 
 - Only matching pure elements count.
-- Wrong elements do not count.
+- Wrong elements do not count, but they may enter or settle inside the bucket.
+- Wrong elements do not contaminate, fail, or reset the bucket in MVP.
 - Matching elements remain in the simulation and settle inside the bucket volume.
 - Buckets are open containers. Side walls block material, the wall opposite the configured intake blocks material, and the configured intake side stays open. Falling materials usually use top intake; rising gases such as steam use bottom intake.
 - Fill progress is measured from the matching material currently inside the bucket interior. Water uses a small completion tolerance because liquid volume is fractional.
@@ -294,6 +329,6 @@ Core tests should cover:
 - Collision against drawn lines.
 - Emitter spawning.
 - Water + fire reaction.
-- Bucket matching and wrong-element rejection.
+- Bucket matching and wrong-element non-counting behavior.
 - Reset behavior.
 - Determinism with a fixed seed and input sequence.

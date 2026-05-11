@@ -1,7 +1,8 @@
 import {
   EMPTY_CELL,
-  ELEMENT_PALETTE,
   type CellValue,
+  type ElementType,
+  getElementPalette,
   isDrawnLine,
   isElement,
 } from "../simulation/elements";
@@ -249,12 +250,12 @@ function drawGlyph(
   }
 }
 
-function getBucketFillColor(element: keyof typeof ELEMENT_PALETTE): string {
-  return ELEMENT_PALETTE[element][0] ?? "#111111";
+function getBucketFillColor(element: ElementType): string {
+  return getElementPalette(element)[0] ?? "#111111";
 }
 
 function getWaterColor(amount: number, x: number, y: number): string {
-  const colors = ELEMENT_PALETTE.water;
+  const colors = getElementPalette("water");
   const baseColor = colors[(x * 17 + y * 31) % colors.length] ?? colors[0] ?? "#4f9fd9";
 
   if (amount > 0.65) {
@@ -273,7 +274,7 @@ function getParticleColor(element: CellValue, x: number, y: number, fireLife: nu
     return getFireColor(fireLife, x, y);
   }
 
-  const colors = ELEMENT_PALETTE[element];
+  const colors = getElementPalette(element);
   const color = colors[(x * 17 + y * 31) % colors.length];
 
   return color ?? colors[0] ?? "#000000";
@@ -290,7 +291,7 @@ function getFireColor(fireLife: number, x: number, y: number): string {
     return "#f49a42";
   }
 
-  const colors = ELEMENT_PALETTE.fire;
+  const colors = getElementPalette("fire");
   const color = colors[(x * 17 + y * 31) % colors.length];
 
   return color ?? colors[0] ?? "#f26d3d";

@@ -51,6 +51,36 @@ describe("world reactions and fire", () => {
     expect(world.snapshot().hearths).toHaveLength(1);
   });
 
+  it("processes hearth heat before water and fire contact reactions", () => {
+    const world = createWorld({
+      emitters: [],
+      hearths: [
+        {
+          flameRatePerTick: 0,
+          heatRadius: 1,
+          id: "hearth",
+          rect: {
+            height: 1,
+            width: 3,
+            x: 1,
+            y: 4,
+          },
+        },
+      ],
+      height: 5,
+      seed: 1,
+      width: 5,
+    });
+
+    world.setCell(2, 3, "water");
+    world.setCell(3, 3, "fire");
+    world.step();
+
+    expect(totalWater(world)).toBeCloseTo(0);
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(countElementCells(world, "fire")).toBe(1);
+  });
+
   it("blocks falling particles with hearth solids", () => {
     const world = createWorld({
       emitters: [],

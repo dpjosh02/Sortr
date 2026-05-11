@@ -5,6 +5,7 @@ import {
   type ElementType,
   isElement,
   isEmpty,
+  usesLiquidLayer,
 } from "../elements";
 import { createEmitterState } from "../emitters";
 import { getLineCells } from "../lines";
@@ -175,7 +176,7 @@ function addElementCell(
     return;
   }
 
-  if (element === "water") {
+  if (usesLiquidLayer(element)) {
     state.fireLife[index] = 0;
     state.water[index] = Math.min(MAX_WATER, (state.water[index] ?? 0) + MAX_WATER);
     return;
@@ -221,7 +222,7 @@ function setCell(state: MutableWorldState, x: number, y: number, value: CellValu
 
   const index = toIndex(state, x, y);
 
-  if (value === "water") {
+  if (isElement(value) && usesLiquidLayer(value)) {
     clearElementCell(state, index);
     state.water[index] = MAX_WATER;
     return;

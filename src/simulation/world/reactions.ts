@@ -1,58 +1,82 @@
-import { EMPTY_CELL, isEmpty } from "../elements";
 import type { GridPoint } from "../lines";
+import {
+  getNeighborContactReactionRules,
+  type NeighborContactReactionProduct,
+  type NeighborContactReactionRule,
+} from "../reactionRules";
 
-import { clearElementCell, getWaterAmount, isInside, setElementCell, toIndex } from "./grid";
+import { isInside, toIndex } from "./grid";
 import { getNeighborCells } from "./neighbors";
-import { isStaticSolidCell } from "./solids";
-import { MIN_WATER, type MutableWorldState } from "./types";
+import {
+  consumeReactionParticipantAtIndex,
+  hasReactionParticipantAtCell,
+  placeReactionProductAtCell,
+} from "./reactionCells";
+import type { MutableWorldState } from "./types";
 
 export function processReactions(state: MutableWorldState): void {
-  const steamCells: GridPoint[] = [];
-  const consumedWater = new Set<number>();
-  const consumedFire = new Set<number>();
+  for (const rule of getNeighborContactReactionRules()) {
+    processNeighborContactReaction(state, rule);
+  }
+}
+
+function processNeighborContactReaction(
+  state: MutableWorldState,
+  rule: NeighborContactReactionRule,
+): void {
+  const productCells: QueuedReactionProduct[] = [];
+  const consumedNeighbors = new Set<number>();
+  const consumedSources = new Set<number>();
 
   for (let y = 0; y < state.height; y += 1) {
     for (let x = 0; x < state.width; x += 1) {
       const index = toIndex(state, x, y);
 
-      if (state.cells[index] !== "fire" || consumedFire.has(index)) {
+      if (consumedSources.has(index) || !hasReactionParticipantAtCell(state, rule.source, x, y)) {
         continue;
       }
 
-      const waterNeighbor = findWaterNeighbor(state, x, y, consumedWater);
+      const reactantNeighbor = findReactantNeighbor(state, x, y, rule, consumedNeighbors);
 
-      if (waterNeighbor === null) {
+      if (reactantNeighbor === null) {
         continue;
       }
 
-      consumedWater.add(toIndex(state, waterNeighbor.x, waterNeighbor.y));
-      consumedFire.add(index);
-      steamCells.push({ x, y });
+      consumedNeighbors.add(toIndex(state, reactantNeighbor.x, reactantNeighbor.y));
+      consumedSources.add(index);
+
+      for (const product of rule.products) {
+        productCells.push({
+          element: product.element,
+          point: getNeighborContactProductPoint(product, { x, y }, reactantNeighbor),
+        });
+      }
     }
   }
 
-  for (const index of consumedWater) {
-    state.water[index] = 0;
-  }
-
-  for (const index of consumedFire) {
-    clearElementCell(state, index);
-  }
-
-  for (const cell of steamCells) {
-    const index = toIndex(state, cell.x, cell.y);
-
-    if (!isStaticSolidCell(state, cell.x, cell.y) && isEmpty(state.cells[index] ?? EMPTY_CELL)) {
-      setElementCell(state, index, "steam");
+  if (rule.consumeNeighbor) {
+    for (const index of consumedNeighbors) {
+      consumeReactionParticipantAtIndex(state, rule.neighbor, index);
     }
+  }
+
+  if (rule.consumeSource) {
+    for (const index of consumedSources) {
+      consumeReactionParticipantAtIndex(state, rule.source, index);
+    }
+  }
+
+  for (const product of productCells) {
+    placeReactionProductAtCell(state, product.element, product.point.x, product.point.y);
   }
 }
 
-function findWaterNeighbor(
+function findReactantNeighbor(
   state: MutableWorldState,
   x: number,
   y: number,
-  consumedWater: ReadonlySet<number>,
+  rule: NeighborContactReactionRule,
+  consumedNeighbors: ReadonlySet<number>,
 ): GridPoint | null {
   for (const neighbor of getNeighborCells(x, y)) {
     if (!isInside(state, neighbor.x, neighbor.y)) {
@@ -61,14 +85,29 @@ function findWaterNeighbor(
 
     const index = toIndex(state, neighbor.x, neighbor.y);
 
-    if (consumedWater.has(index)) {
+    if (consumedNeighbors.has(index)) {
       continue;
     }
 
-    if (getWaterAmount(state, neighbor.x, neighbor.y) > MIN_WATER) {
+    if (hasReactionParticipantAtCell(state, rule.neighbor, neighbor.x, neighbor.y)) {
       return neighbor;
     }
   }
 
   return null;
+}
+
+interface QueuedReactionProduct {
+  readonly element: QueuedReactionProductElement;
+  readonly point: GridPoint;
+}
+
+type QueuedReactionProductElement = NeighborContactReactionProduct["element"];
+
+function getNeighborContactProductPoint(
+  product: NeighborContactReactionProduct,
+  source: GridPoint,
+  neighbor: GridPoint,
+): GridPoint {
+  return product.location === "source-cell" ? source : neighbor;
 }

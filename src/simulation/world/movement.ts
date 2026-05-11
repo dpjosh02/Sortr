@@ -1,4 +1,11 @@
-import { EMPTY_CELL, canDisplace, isElement, isEmpty } from "../elements";
+import {
+  EMPTY_CELL,
+  canDisplace,
+  getElementDefinition,
+  getElementsByBehavior,
+  isElement,
+  isEmpty,
+} from "../elements";
 import type { ElementType } from "../elements";
 import type { GridPoint } from "../lines";
 
@@ -27,9 +34,18 @@ export function moveParticles(state: MutableWorldState): void {
   const moved = Array<boolean>(state.cells.length).fill(false);
   const displacedWater = Array<boolean>(state.cells.length).fill(false);
 
-  moveParticleFamily(state, moved, displacedWater, "sand");
-  moveParticleFamily(state, moved, displacedWater, "steam");
-  moveParticleFamily(state, moved, displacedWater, "fire");
+  for (const element of getElementsByBehavior("powder-fall")) {
+    moveParticleFamily(state, moved, displacedWater, element);
+  }
+
+  for (const element of getElementsByBehavior("gas-rise")) {
+    moveParticleFamily(state, moved, displacedWater, element);
+  }
+
+  for (const element of getElementsByBehavior("energy-rise")) {
+    moveParticleFamily(state, moved, displacedWater, element);
+  }
+
   flowWater(state);
 }
 
@@ -73,23 +89,26 @@ function moveParticleFamily(
         continue;
       }
 
-      if (element === "sand") {
-        moveSand(state, moved, displacedWater, x, y);
-      } else if (element === "steam") {
-        moveSteam(state, moved, x, y);
-      } else if (element === "fire") {
-        moveFire(state, moved, x, y);
+      const behavior = getElementDefinition(element).behavior;
+
+      if (behavior === "powder-fall") {
+        movePowder(state, moved, displacedWater, x, y, element);
+      } else if (behavior === "gas-rise") {
+        moveGas(state, moved, x, y);
+      } else if (behavior === "energy-rise") {
+        moveEnergy(state, moved, x, y);
       }
     }
   }
 }
 
-function moveSand(
+function movePowder(
   state: MutableWorldState,
   moved: boolean[],
   displacedWater: boolean[],
   x: number,
   y: number,
+  element: ElementType,
 ): void {
   const side = state.random.pickDirection();
   const candidates = [
@@ -102,10 +121,10 @@ function moveSand(
     return;
   }
 
-  trySettleSubmergedSand(state, moved, displacedWater, x, y);
+  trySettleSubmergedPowder(state, moved, displacedWater, x, y, element);
 }
 
-function moveSteam(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
+function moveGas(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
   const side = state.random.pickDirection();
   const candidates = [
     { x, y: y - 1 },
@@ -118,7 +137,7 @@ function moveSteam(state: MutableWorldState, moved: boolean[], x: number, y: num
   tryMoveGasOrEnergyToFirstAvailableCell(state, moved, x, y, candidates);
 }
 
-function moveFire(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
+function moveEnergy(state: MutableWorldState, moved: boolean[], x: number, y: number): void {
   if (y === 0) {
     clearElementCell(state, toIndex(state, x, y));
     return;
@@ -274,15 +293,15 @@ function tryMoveIntoWaterCell(
     return false;
   }
 
-  const hasSandPressure =
-    movingCell === "sand" &&
-    getSandColumnHeight(state, fromX, fromY) >= SAND_PRESSURE_COLUMN_HEIGHT;
+  const hasPowderPressure =
+    getElementDefinition(movingCell).behavior === "powder-fall" &&
+    getPowderColumnHeight(state, fromX, fromY, movingCell) >= SAND_PRESSURE_COLUMN_HEIGHT;
 
   if (
-    (!hasSandPressure && displacedWater[targetIndex] === true) ||
+    (!hasPowderPressure && displacedWater[targetIndex] === true) ||
     !displaceWaterForSolid(state, displacedWater, candidate.x, candidate.y, targetWater, {
-      ignoreDisplacedWater: hasSandPressure,
-      searchRadius: hasSandPressure
+      ignoreDisplacedWater: hasPowderPressure,
+      searchRadius: hasPowderPressure
         ? PRESSURE_DISPLACEMENT_SEARCH_RADIUS
         : DISPLACEMENT_SEARCH_RADIUS,
     })
@@ -296,18 +315,19 @@ function tryMoveIntoWaterCell(
   return true;
 }
 
-function trySettleSubmergedSand(
+function trySettleSubmergedPowder(
   state: MutableWorldState,
   moved: boolean[],
   displacedWater: boolean[],
   fromX: number,
   fromY: number,
+  element: ElementType,
 ): void {
-  if (!isSandTouchingWater(state, fromX, fromY)) {
+  if (!isPowderTouchingWater(state, fromX, fromY)) {
     return;
   }
 
-  const target = findSubmergedSandSettleTarget(state, fromX, fromY);
+  const target = findSubmergedPowderSettleTarget(state, fromX, fromY);
 
   if (target === null) {
     return;
@@ -327,12 +347,12 @@ function trySettleSubmergedSand(
   }
 
   clearElementCell(state, toIndex(state, fromX, fromY));
-  setElementCell(state, targetIndex, "sand");
+  setElementCell(state, targetIndex, element);
   state.water[targetIndex] = 0;
   moved[targetIndex] = true;
 }
 
-function findSubmergedSandSettleTarget(
+function findSubmergedPowderSettleTarget(
   state: MutableWorldState,
   fromX: number,
   fromY: number,
@@ -359,7 +379,7 @@ function findSubmergedSandSettleTarget(
   return best;
 }
 
-function isSandTouchingWater(state: MutableWorldState, x: number, y: number): boolean {
+function isPowderTouchingWater(state: MutableWorldState, x: number, y: number): boolean {
   for (const neighbor of getOrthogonalNeighbors(x, y)) {
     if (getWaterAmount(state, neighbor.x, neighbor.y) > MIN_WATER) {
       return true;
@@ -369,11 +389,16 @@ function isSandTouchingWater(state: MutableWorldState, x: number, y: number): bo
   return false;
 }
 
-function getSandColumnHeight(state: MutableWorldState, x: number, y: number): number {
+function getPowderColumnHeight(
+  state: MutableWorldState,
+  x: number,
+  y: number,
+  element: ElementType,
+): number {
   let height = 0;
 
   for (let scanY = y; scanY >= 0; scanY -= 1) {
-    if (state.cells[toIndex(state, x, scanY)] !== "sand") {
+    if (state.cells[toIndex(state, x, scanY)] !== element) {
       break;
     }
 

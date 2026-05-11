@@ -1,7 +1,13 @@
-import { EMPTY_CELL, isEmpty } from "../elements";
+import { EMPTY_CELL, isEmpty, type ElementType } from "../elements";
 import type { GridPoint } from "../lines";
+import { getHearthHeatReactionRules } from "../reactionRules";
 
 import { assertPositiveInteger, getWaterAmount, isInside, setElementCell, toIndex } from "./grid";
+import {
+  consumeReactionParticipantAtIndex,
+  hasReactionParticipantAtCell,
+  placeReactionProductAtCell,
+} from "./reactionCells";
 import { isStaticSolidCell } from "./solids";
 import type { HearthDefinition, HearthSnapshot, HearthState, MutableWorldState } from "./types";
 import { DEFAULT_HEARTH_FLAME_RATE, DEFAULT_HEARTH_HEAT_RADIUS, MIN_WATER } from "./types";
@@ -40,25 +46,37 @@ export function createHearthSnapshots(hearths: readonly HearthState[]): HearthSn
 }
 
 function convertWaterAtHearth(state: MutableWorldState, hearth: HearthState): void {
-  const steamCells: GridPoint[] = [];
+  for (const rule of getHearthHeatReactionRules()) {
+    const productCells: HearthHeatQueuedProduct[] = [];
 
-  for (const cell of getHearthHeatCells(state, hearth.definition)) {
-    const index = toIndex(state, cell.x, cell.y);
+    for (const cell of getHearthHeatCells(state, hearth.definition)) {
+      const index = toIndex(state, cell.x, cell.y);
 
-    if (state.water[index] === undefined || state.water[index] <= MIN_WATER) {
-      continue;
+      if (!hasReactionParticipantAtCell(state, rule.reactant, cell.x, cell.y)) {
+        continue;
+      }
+
+      if (rule.consumeReactant) {
+        consumeReactionParticipantAtIndex(state, rule.reactant, index);
+      }
+
+      for (const product of rule.products) {
+        productCells.push({
+          element: product.element,
+          point: cell,
+        });
+      }
     }
 
-    state.water[index] = 0;
-
-    if (isEmpty(state.cells[index] ?? EMPTY_CELL) && !isStaticSolidCell(state, cell.x, cell.y)) {
-      steamCells.push(cell);
+    for (const product of productCells) {
+      placeReactionProductAtCell(state, product.element, product.point.x, product.point.y);
     }
   }
+}
 
-  for (const cell of steamCells) {
-    setElementCell(state, toIndex(state, cell.x, cell.y), "steam");
-  }
+interface HearthHeatQueuedProduct {
+  readonly element: ElementType;
+  readonly point: GridPoint;
 }
 
 function emitHearthFlames(state: MutableWorldState, hearth: HearthState): void {

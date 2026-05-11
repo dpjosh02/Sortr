@@ -1,4 +1,4 @@
-import type { ElementType } from "../elements";
+import { usesLiquidLayer, type ElementType } from "../elements";
 import type { GridPoint } from "../lines";
 
 import { assertPositiveInteger, isInside, toIndex } from "./grid";
@@ -60,7 +60,7 @@ function getBucketCellFill(
 ): number {
   const index = toIndex(state, x, y);
 
-  if (target === "water") {
+  if (usesLiquidLayer(target)) {
     return state.water[index] ?? 0;
   }
 

@@ -1,4 +1,4 @@
-import { EMPTY_CELL, isEmpty } from "../elements";
+import { EMPTY_CELL, isEmpty, usesLiquidLayer } from "../elements";
 import type { EmitterDefinition } from "../emitters";
 
 import { clampCell, getWaterAmount, setElementCell, toIndex } from "./grid";
@@ -20,7 +20,7 @@ export function spawnFromEmitters(state: MutableWorldState): void {
       const spawnIndex = toIndex(state, spawn.x, spawn.y);
       const spawnCell = state.cells[spawnIndex] ?? EMPTY_CELL;
 
-      if (emitter.definition.element === "water") {
+      if (usesLiquidLayer(emitter.definition.element)) {
         if (isEmpty(spawnCell) && !isStaticSolidCell(state, spawn.x, spawn.y)) {
           state.water[spawnIndex] = Math.min(MAX_WATER, (state.water[spawnIndex] ?? 0) + 1);
         }
