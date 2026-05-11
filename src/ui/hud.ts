@@ -10,8 +10,10 @@ export interface GameHud {
   readonly levelSelect: HTMLSelectElement;
   readonly nextButton: HTMLButtonElement;
   readonly resetButton: HTMLButtonElement;
+  setCompletionText(text: string | null): void;
   setCanvasSize(width: number, height: number): void;
   setDevToolsVisible(visible: boolean): void;
+  setLevelContext(text: string): void;
   setSelectedDevSandboxElement(element: DevSandboxElement | null): void;
   setLevelIndex(index: number): void;
   setNextButtonVisible(visible: boolean): void;
@@ -48,6 +50,11 @@ export function createGameHud(options: GameHudOptions): GameHud {
   });
   const status = document.createElement("p");
   status.className = "status-line";
+  const levelContext = document.createElement("p");
+  levelContext.className = "level-context";
+  const completion = document.createElement("p");
+  completion.className = "completion-message";
+  completion.hidden = true;
 
   const toolbar = document.createElement("div");
   toolbar.className = "toolbar";
@@ -59,7 +66,7 @@ export function createGameHud(options: GameHudOptions): GameHud {
 
   const shell = document.createElement("main");
   shell.className = "game-shell";
-  shell.append(canvas, status);
+  shell.append(levelContext, canvas, status, completion);
 
   const element = document.createElement("div");
   element.className = "app-root";
@@ -72,6 +79,10 @@ export function createGameHud(options: GameHudOptions): GameHud {
     levelSelect,
     nextButton,
     resetButton,
+    setCompletionText(text: string | null): void {
+      completion.hidden = text === null;
+      completion.textContent = text;
+    },
     setCanvasSize(width: number, height: number): void {
       canvas.width = width;
       canvas.height = height;
@@ -80,6 +91,9 @@ export function createGameHud(options: GameHudOptions): GameHud {
       debugButton.toggleAttribute("aria-pressed", visible);
       levelSelect.hidden = !visible;
       devBrushPalette.setVisible(visible);
+    },
+    setLevelContext(text: string): void {
+      levelContext.textContent = text;
     },
     setSelectedDevSandboxElement(element: DevSandboxElement | null): void {
       devBrushPalette.setSelectedElement(element);

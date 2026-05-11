@@ -21,6 +21,7 @@ import {
 } from "../levels/levelCatalog";
 import { createCanvasRenderer, type CanvasRenderer } from "../rendering/canvasRenderer";
 import { createWorld, type World } from "../simulation/world";
+import { createCompletionText, createLevelContextText } from "../ui/campaignText";
 import { createGameHud, type GameHud } from "../ui/hud";
 import { createStatusText } from "../ui/statusText";
 
@@ -156,6 +157,14 @@ function createControllerState(options: ControllerStateOptions): ControllerState
       level.world.width * level.cellSize,
       level.world.height * level.cellSize,
     );
+    options.hud.setCompletionText(null);
+    options.hud.setLevelContext(
+      createLevelContextText({
+        lesson: level.lesson,
+        levelIndex: index,
+        totalLevels: LEVEL_CATALOG.length,
+      }),
+    );
     options.hud.setLevelIndex(index);
     render();
   }
@@ -170,6 +179,12 @@ function createControllerState(options: ControllerStateOptions): ControllerState
       cellSize: level.cellSize,
     });
     options.hud.setNextButtonVisible(snapshot.isComplete && hasNextLevel);
+    options.hud.setCompletionText(
+      createCompletionText({
+        hasNextLevel,
+        isComplete: snapshot.isComplete,
+      }),
+    );
     options.hud.setStatus(
       createStatusText({
         activeInputLabel: getActiveInputLabel(options.getSelectedDevSandboxElement()),
