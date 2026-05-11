@@ -174,7 +174,7 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Direction: slight upward flicker or source-bound movement.
 - Bucket target: possibly later, not required for MVP.
 - Reaction: creates steam when contacting water.
-- Lifetime: expires after roughly 5 simulation ticks, fading lighter as it nears the end of life.
+- Lifetime: expires after roughly 12 simulation ticks, fading lighter as it nears the end of life.
 - Boundary behavior: exits through the top border instead of accumulating on the ceiling.
 
 ### Steam

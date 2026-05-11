@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { EMPTY_CELL } from "./elements";
-import { createWorld, type WorldDefinition } from "./world";
+import { FIRE_TTL, createWorld, type WorldDefinition } from "./world";
 
 describe("createWorld", () => {
   it("spawns particles from top emitters and moves them deterministically", () => {
@@ -510,7 +510,7 @@ describe("createWorld", () => {
     world.step();
 
     expect(countElementCells(world, "fire")).toBe(1);
-    expect(Math.max(...world.snapshot().fireLife)).toBe(4);
+    expect(Math.max(...world.snapshot().fireLife)).toBe(FIRE_TTL - 1);
   });
 
   it("lets fire particles exit through the top edge", () => {
@@ -541,9 +541,9 @@ describe("createWorld", () => {
     world.step();
 
     expect(world.getCell(0, 2)).toBe("fire");
-    expect(world.snapshot().fireLife[2]).toBe(4);
+    expect(world.snapshot().fireLife[2]).toBe(FIRE_TTL - 1);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < FIRE_TTL - 1; index += 1) {
       world.step();
     }
 

@@ -126,7 +126,7 @@ const SAND_PRESSURE_COLUMN_HEIGHT = 3;
 const SUBMERGED_SETTLE_DISTANCE = 12;
 const DEFAULT_HEARTH_FLAME_RATE = 0.35;
 const DEFAULT_HEARTH_HEAT_RADIUS = 2;
-const FIRE_TTL = 5;
+export const FIRE_TTL = 12;
 
 export function createWorld(definition: WorldDefinition): World {
   assertPositiveInteger("width", definition.width);

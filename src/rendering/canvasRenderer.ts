@@ -5,9 +5,7 @@ import {
   isDrawnLine,
   isElement,
 } from "../simulation/elements";
-import type { HearthSnapshot, WorldSnapshot } from "../simulation/world";
-
-const FIRE_RENDER_TTL = 5;
+import { FIRE_TTL, type HearthSnapshot, type WorldSnapshot } from "../simulation/world";
 
 export interface CanvasRenderer {
   clear(background: string): void;
@@ -159,7 +157,7 @@ function getParticleColor(element: CellValue, x: number, y: number, fireLife: nu
 }
 
 function getFireColor(fireLife: number, x: number, y: number): string {
-  const remainingRatio = Math.max(0, Math.min(1, fireLife / FIRE_RENDER_TTL));
+  const remainingRatio = Math.max(0, Math.min(1, fireLife / FIRE_TTL));
 
   if (remainingRatio <= 0.25) {
     return "#fff0b8";
