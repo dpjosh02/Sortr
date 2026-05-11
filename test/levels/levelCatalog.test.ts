@@ -18,6 +18,7 @@ describe("LEVEL_CATALOG", () => {
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("005-crossing-paths");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("006-mix-the-earth");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("007-warm-the-mud");
+    expect(LEVEL_CATALOG.map((level) => level.id)).toContain("008-smoke-and-ash");
   });
 
   it("uses valid bucket definitions", () => {
@@ -127,6 +128,10 @@ describe("LEVEL_CATALOG", () => {
       {
         id: "007-warm-the-mud",
         lesson: "Heat mud to release steam while dirt falls away.",
+      },
+      {
+        id: "008-smoke-and-ash",
+        lesson: "Burn dirt into rising smoke and falling ash.",
       },
     ]);
   });

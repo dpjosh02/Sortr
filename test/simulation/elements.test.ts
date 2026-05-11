@@ -14,10 +14,10 @@ import {
 
 describe("element registry", () => {
   it("keeps current elements registered with behavior categories", () => {
-    expect(ELEMENTS).toEqual(["water", "sand", "fire", "steam", "dirt", "mud"]);
+    expect(ELEMENTS).toEqual(["water", "sand", "fire", "steam", "dirt", "mud", "smoke", "ash"]);
     expect(getElementsByBehavior("liquid-flow")).toEqual(["water"]);
-    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud"]);
-    expect(getElementsByBehavior("gas-rise")).toEqual(["steam"]);
+    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud", "ash"]);
+    expect(getElementsByBehavior("gas-rise")).toEqual(["steam", "smoke"]);
     expect(getElementsByBehavior("energy-rise")).toEqual(["fire"]);
   });
 
@@ -28,6 +28,8 @@ describe("element registry", () => {
     expect(usesLiquidLayer("fire")).toBe(false);
     expect(usesLiquidLayer("dirt")).toBe(false);
     expect(usesLiquidLayer("mud")).toBe(false);
+    expect(usesLiquidLayer("smoke")).toBe(false);
+    expect(usesLiquidLayer("ash")).toBe(false);
   });
 
   it("keeps renderer palettes in element registry data", () => {
@@ -37,6 +39,8 @@ describe("element registry", () => {
     expect(getElementPalette("steam")[0]).toBe("#d8dde1");
     expect(getElementPalette("dirt")[0]).toBe("#8a6a45");
     expect(getElementPalette("mud")[0]).toBe("#5f4a38");
+    expect(getElementPalette("smoke")[0]).toBe("#8b8f91");
+    expect(getElementPalette("ash")[0]).toBe("#6f6a62");
   });
 });
 
@@ -45,6 +49,7 @@ describe("reaction rule registry", () => {
     expect(REACTION_RULES.map((rule) => rule.id)).toEqual([
       "water-fire-to-steam",
       "fire-mud-to-steam-dirt",
+      "fire-dirt-to-smoke-ash",
       "dirt-water-to-mud",
       "hearth-heat-water-to-steam",
     ]);
@@ -88,6 +93,30 @@ describe("reaction rule registry", () => {
           },
           {
             element: "dirt",
+            location: "neighbor-cell",
+          },
+        ],
+        source: {
+          element: "fire",
+          storage: "particle",
+        },
+      },
+      {
+        consumeNeighbor: true,
+        consumeSource: true,
+        id: "fire-dirt-to-smoke-ash",
+        kind: "neighbor-contact",
+        neighbor: {
+          element: "dirt",
+          storage: "particle",
+        },
+        products: [
+          {
+            element: "smoke",
+            location: "source-cell",
+          },
+          {
+            element: "ash",
             location: "neighbor-cell",
           },
         ],

@@ -83,6 +83,30 @@ export const REACTION_RULES: readonly ReactionRule[] = [
   {
     consumeNeighbor: true,
     consumeSource: true,
+    id: "fire-dirt-to-smoke-ash",
+    kind: "neighbor-contact",
+    neighbor: {
+      element: "dirt",
+      storage: "particle",
+    },
+    products: [
+      {
+        element: "smoke",
+        location: "source-cell",
+      },
+      {
+        element: "ash",
+        location: "neighbor-cell",
+      },
+    ],
+    source: {
+      element: "fire",
+      storage: "particle",
+    },
+  },
+  {
+    consumeNeighbor: true,
+    consumeSource: true,
     id: "dirt-water-to-mud",
     kind: "neighbor-contact",
     neighbor: {

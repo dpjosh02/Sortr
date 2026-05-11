@@ -88,7 +88,7 @@ The first playable snapshot should include:
 
 ## Later Scope
 
-- Additional chemistry chains after dirt and mud: smoke, ash, oil, lava, ice, moss, salt, brine, charcoal, crystal, and related transformations.
+- Additional chemistry chains after dirt, mud, smoke, and ash: oil, lava, ice, moss, salt, brine, charcoal, crystal, and related transformations.
 - Level select for replaying beaten or otherwise unlocked levels.
 - Bucket purity thresholds or contamination rules.
 - Acid that erodes drawn lines or specific obstacles.
@@ -117,7 +117,7 @@ The first playable snapshot should include:
    - First post-MVP chemistry chain: water turns dirt into mud, then heat can release steam and leave dirt behind. Later tuning may add clumping or filtration puzzles.
 
 6. **Smoke and ash**
-   - Later family for combustion chains.
+   - First combustion chain: fire turns dirt into rising smoke and falling ash.
 
 7. **Acid**
    - Later family for altering player-drawn lines and obstacles.

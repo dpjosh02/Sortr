@@ -204,6 +204,13 @@ otherwise unlocked levels, not skipping ahead through the campaign by default.
 - Fixed hearth.
 - Upside-down steam bucket.
 
+### 008-smoke-and-ash
+
+- Teaches combustion as a split-output chain.
+- Dirt emitter.
+- Fixed hearth.
+- Upside-down smoke bucket and top-opening ash bucket.
+
 ## Level Validation
 
 A level should be considered valid if:

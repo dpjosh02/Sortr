@@ -252,9 +252,32 @@ User test:
 
 - Confirm heating mud feels like a natural continuation of the prior dirt + water level.
 
+## Snapshot 11: Combustion Pair
+
+Goal: Add the smoke and ash chemistry family with one reaction and one authored level.
+
+Deliverables:
+
+- `smoke` and `ash` element registry entries using existing gas and powder movement.
+- Fire + dirt -> smoke + ash reaction rule.
+- One hand-authored campaign level that teaches rising smoke and falling ash.
+- Tests for element registration, reaction behavior, reaction priority, and level validation.
+- Documentation updated to describe the current combustion chain.
+
+Exit criteria:
+
+- Existing campaign levels still work.
+- The new level teaches one idea: burning dirt produces one rising output and one falling output.
+- No new player tools, tool-like mechanics, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm the smoke/ash level reads as a chemistry chain and not as a precision-routing challenge.
+
 ## Later Milestones
 
-- Continue chemistry chain expansion: smoke and ash, oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.
+- Continue chemistry chain expansion: oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.
 - Additional campaign levels that teach one new chemistry idea at a time.
 - Level select for replaying beaten or otherwise unlocked levels.
 - Challenge objectives or optional mastery goals.

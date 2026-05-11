@@ -18,7 +18,9 @@ describe("dev sandbox tools", () => {
     expect(getDevSandboxElementForKey("4")).toBe("steam");
     expect(getDevSandboxElementForKey("5")).toBe("dirt");
     expect(getDevSandboxElementForKey("6")).toBe("mud");
-    expect(getDevSandboxElementForKey("7")).toBeNull();
+    expect(getDevSandboxElementForKey("7")).toBe("smoke");
+    expect(getDevSandboxElementForKey("8")).toBe("ash");
+    expect(getDevSandboxElementForKey("9")).toBeNull();
   });
 
   it("uses the existing plus-shaped sandbox brush stamp", () => {

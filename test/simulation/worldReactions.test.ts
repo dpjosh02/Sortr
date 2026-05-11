@@ -153,6 +153,43 @@ describe("world reactions and fire", () => {
     expect(countElementCells(world, "dirt")).toBe(0);
   });
 
+  it("burns dirt into smoke and ash", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "fire");
+    world.setCell(2, 1, "dirt");
+    world.step();
+
+    expect(countElementCells(world, "fire")).toBe(0);
+    expect(countElementCells(world, "dirt")).toBe(0);
+    expect(countElementCells(world, "smoke")).toBe(1);
+    expect(countElementCells(world, "ash")).toBe(1);
+  });
+
+  it("burns dirt before nearby water can turn it into mud", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "fire");
+    world.setCell(2, 1, "dirt");
+    world.setCell(3, 1, "water");
+    world.step();
+
+    expect(countElementCells(world, "smoke")).toBe(1);
+    expect(countElementCells(world, "ash")).toBe(1);
+    expect(countElementCells(world, "mud")).toBe(0);
+    expect(totalWater(world)).toBeCloseTo(1);
+  });
+
   it("blocks falling particles with hearth solids", () => {
     const world = createWorld({
       emitters: [],

@@ -80,4 +80,51 @@ export const CHEMISTRY_LEVELS: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e2e2dc",
+    cellSize: 4,
+    designerNotes:
+      "This introduces the smoke and ash family with one clear split: heating dirt creates a rising goal material and a falling byproduct that players can route separately.",
+    id: "008-smoke-and-ash",
+    lesson: "Burn dirt into rising smoke and falling ash.",
+    title: "Smoke and Ash",
+    world: {
+      buckets: [
+        {
+          id: "smoke-bucket",
+          intake: "bottom",
+          rect: { height: 24, width: 40, x: 166, y: 20 },
+          required: 16,
+          target: "smoke",
+        },
+        {
+          id: "ash-bucket",
+          intake: "top",
+          rect: { height: 24, width: 40, x: 28, y: 126 },
+          required: 24,
+          target: "ash",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "dirt",
+          id: "dirt-source",
+          range: { end: 76, start: 70 },
+          ratePerTick: 0.6,
+        },
+      ],
+      hearths: [
+        {
+          flameRatePerTick: 0.8,
+          heatRadius: 2,
+          id: "ember-hearth",
+          rect: { height: 4, width: 16, x: 108, y: 148 },
+        },
+      ],
+      height: 160,
+      seed: 20260510,
+      width: 240,
+    },
+  },
 ];
