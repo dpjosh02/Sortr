@@ -160,11 +160,11 @@ function getFireColor(fireLife: number, x: number, y: number): string {
   const remainingRatio = Math.max(0, Math.min(1, fireLife / FIRE_TTL));
 
   if (remainingRatio <= 0.25) {
-    return "#fff0b8";
+    return "#f6b45a";
   }
 
   if (remainingRatio <= 0.5) {
-    return "#f9d36a";
+    return "#f49a42";
   }
 
   const colors = ELEMENT_PALETTE.fire;
