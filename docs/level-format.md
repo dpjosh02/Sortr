@@ -190,6 +190,20 @@ otherwise unlocked levels, not skipping ahead through the campaign by default.
 - Water and fire sources.
 - Central obstacle layout encourages multiple line strategies.
 
+### 006-mix-the-earth
+
+- Teaches the first post-MVP chemistry chain.
+- Dirt emitter and water emitter.
+- Mud bucket.
+- Open space lets players choose where to mix before routing the result.
+
+### 007-warm-the-mud
+
+- Teaches heat as a continuation of the dirt and mud chain.
+- Mud emitter.
+- Fixed hearth.
+- Upside-down steam bucket.
+
 ## Level Validation
 
 A level should be considered valid if:

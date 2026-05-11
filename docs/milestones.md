@@ -186,9 +186,75 @@ Exit criteria:
 - No new elements or puzzle mechanics are added during this stabilization slice.
 - User-test feedback from Snapshot 6 is triaged before chemistry expansion.
 
+## Snapshot 8: Campaign User-Test Readiness
+
+Goal: Make the current five-level campaign easier to test end-to-end before adding the first new chemistry family.
+
+Deliverables:
+
+- Player-facing level lesson text shown outside the canvas.
+- Linear completion messaging that distinguishes "next puzzle" from "campaign complete."
+- No new elements, reactions, tools, or level-select behavior.
+- Focused UI text tests for campaign progression messaging.
+
+Exit criteria:
+
+- A user can understand each level's lesson without opening dev tools.
+- Completing a non-final level clearly points to the next puzzle.
+- Completing the final available level clearly marks the end of the current campaign pack.
+- `npm run verify` passes.
+
+User test:
+
+- Play through the current campaign and report where a lesson, target, or completion state feels unclear before chemistry expansion begins.
+
+## Snapshot 9: First Chemistry Chain
+
+Goal: Add the first small chemistry family without introducing a large catalog or new player tools.
+
+Deliverables:
+
+- `dirt` and `mud` element registry entries using existing powder movement.
+- Dirt + water -> mud reaction rule in the registry.
+- One hand-authored campaign level that teaches mixing dirt and water before routing mud.
+- Tests for element registration, reaction behavior, reaction priority, and level validation.
+
+Exit criteria:
+
+- Existing five levels still work.
+- The new level teaches one reaction chain and remains solvable with black-line drawing only.
+- No tool-like mechanics, level editor, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm the first chemistry expansion reads as an alchemy chain, not as a sandbox brush exercise.
+
+## Snapshot 10: Heat The First Chain
+
+Goal: Extend the dirt and mud chemistry family by using heat without adding another element family.
+
+Deliverables:
+
+- Fire + mud -> steam + dirt reaction rule.
+- One hand-authored campaign level that teaches heating mud near a hearth.
+- Tests for reaction behavior, reaction priority, and level validation.
+- Documentation updated to describe the current dirt/mud heat chain.
+
+Exit criteria:
+
+- Existing campaign levels still work.
+- The new level teaches one idea: heat mud to release steam.
+- No new player tools, tool-like mechanics, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm heating mud feels like a natural continuation of the prior dirt + water level.
+
 ## Later Milestones
 
-- Chemistry chain expansion first: dirt and mud, smoke and ash, oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.
+- Continue chemistry chain expansion: smoke and ash, oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.
 - Additional campaign levels that teach one new chemistry idea at a time.
 - Level select for replaying beaten or otherwise unlocked levels.
 - Challenge objectives or optional mastery goals.

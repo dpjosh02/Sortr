@@ -73,9 +73,9 @@ Each element has a compact physical definition:
 - Storage model.
 - Palette.
 
-MVP phases:
+Current phases:
 
-- `powder`, such as sand.
+- `powder`, such as sand, dirt, and mud.
 - `liquid`, such as water.
 - `gas`, such as steam.
 - `energy`, such as fire.
@@ -83,7 +83,7 @@ MVP phases:
 Current behavior categories:
 
 - `liquid-flow`, used by water in the fractional liquid layer.
-- `powder-fall`, used by sand for down and down-diagonal falling.
+- `powder-fall`, used by sand, dirt, and mud for down and down-diagonal falling.
 - `gas-rise`, used by steam for upward drift.
 - `energy-rise`, used by fire for short-lived upward flicker.
 
@@ -168,7 +168,7 @@ Examples: fire.
 
 Fire is a dynamic element with flicker-like movement and reaction behavior. It may rise slightly or remain near its source depending on tuning.
 
-## MVP Elements
+## Current Elements
 
 ### Water
 
@@ -200,7 +200,21 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Bucket target: yes.
 - Reaction: none in MVP.
 
-## MVP Reaction Rules
+### Dirt
+
+- Type: powder.
+- Direction: gravity-driven.
+- Bucket target: no current campaign bucket.
+- Reaction: becomes mud when contacting water.
+
+### Mud
+
+- Type: powder.
+- Direction: gravity-driven.
+- Bucket target: yes.
+- Reaction: releases steam and leaves dirt when contacting fire.
+
+## Current Reaction Rules
 
 ### Water + Fire -> Steam
 
@@ -221,6 +235,26 @@ For the first implementation, prefer the simpler rule:
 - The neighboring water volume is consumed.
 - Fire cell becomes empty.
 
+### Dirt + Water -> Mud
+
+When dirt contacts water in an orthogonal or diagonal neighboring cell:
+
+- Mud is created at the dirt cell.
+- The neighboring water volume is consumed.
+- The dirt cell is consumed.
+
+Mud deliberately uses the existing powder movement category in the first chemistry-chain slice. Add specialized mud behavior only after playtesting proves it is needed.
+
+### Fire + Mud -> Steam + Dirt
+
+When fire contacts mud in an orthogonal or diagonal neighboring cell:
+
+- Steam is created at the fire cell.
+- Dirt is created at the mud cell.
+- The fire and mud reactants are consumed.
+
+This keeps the first chemistry family chainable without adding a separate temperature-zone tool. Hearths can supply the fire particles for authored levels.
+
 If that makes levels too easy or fire too fragile, revise after playtesting.
 
 ### Hearths
@@ -238,12 +272,14 @@ This keeps fire grounded as a puzzle tool: players route water into a hot fixtur
 
 ## Reaction Priority
 
-Reaction priority should be explicit. MVP priority:
+Reaction priority should be explicit. Current priority:
 
 1. Bucket intake.
 2. Hearth heat.
 3. Water + fire.
-4. Movement.
+4. Fire + mud.
+5. Dirt + water.
+6. Movement.
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 
@@ -259,6 +295,10 @@ The current registered rules are:
 
 - Liquid-layer water + particle fire -> steam at the fire cell, consuming the
   water and fire.
+- Particle fire + particle mud -> steam at the fire cell and dirt at the mud
+  cell, consuming the fire and mud.
+- Particle dirt + liquid-layer water -> mud at the dirt cell, consuming the
+  water and dirt.
 - Liquid-layer water in a hearth heat zone -> steam at the heated cell,
   consuming the water.
 
@@ -271,7 +311,7 @@ trigger shape.
 
 Player drawing stamps line cells along the pointer path using grid-space interpolation. Lines:
 
-- Block water, sand, fire, and steam in MVP.
+- Block water, sand, fire, steam, dirt, and mud.
 - Persist until reset.
 - Are not individually erasable.
 - Have no ink limit.
@@ -325,10 +365,11 @@ Performance tuning should prioritize:
 
 Core tests should cover:
 
-- Movement for water, sand, and steam.
+- Movement for water, sand, steam, dirt, and mud.
 - Collision against drawn lines.
 - Emitter spawning.
 - Water + fire reaction.
+- Dirt + water reaction.
 - Bucket matching and wrong-element non-counting behavior.
 - Reset behavior.
 - Determinism with a fixed seed and input sequence.
