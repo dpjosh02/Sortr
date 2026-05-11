@@ -37,6 +37,13 @@ export const ELEMENT_REGISTRY = {
     phase: "energy",
     storage: "particle",
   },
+  glass: {
+    behavior: "powder-fall",
+    density: 2.4,
+    palette: ["#a8d8cf", "#d7f0ea", "#79b9ae"],
+    phase: "powder",
+    storage: "particle",
+  },
   sand: {
     behavior: "powder-fall",
     density: 2.2,
@@ -85,6 +92,7 @@ export const ELEMENTS = [
   "mud",
   "smoke",
   "ash",
+  "glass",
 ] as const satisfies readonly ElementType[];
 
 export type CellValue = typeof DRAWN_LINE_CELL | typeof EMPTY_CELL | ElementType;
@@ -96,6 +104,7 @@ export const ELEMENT_PALETTE: Readonly<Record<ElementType, readonly string[]>> =
   ash: ELEMENT_REGISTRY.ash.palette,
   dirt: ELEMENT_REGISTRY.dirt.palette,
   fire: ELEMENT_REGISTRY.fire.palette,
+  glass: ELEMENT_REGISTRY.glass.palette,
   mud: ELEMENT_REGISTRY.mud.palette,
   sand: ELEMENT_REGISTRY.sand.palette,
   smoke: ELEMENT_REGISTRY.smoke.palette,

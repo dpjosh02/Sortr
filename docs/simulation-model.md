@@ -75,7 +75,7 @@ Each element has a compact physical definition:
 
 Current phases:
 
-- `powder`, such as sand, dirt, mud, and ash.
+- `powder`, such as sand, dirt, mud, ash, and glass.
 - `liquid`, such as water.
 - `gas`, such as steam and smoke.
 - `energy`, such as fire.
@@ -83,7 +83,7 @@ Current phases:
 Current behavior categories:
 
 - `liquid-flow`, used by water in the fractional liquid layer.
-- `powder-fall`, used by sand, dirt, mud, and ash for down and down-diagonal falling.
+- `powder-fall`, used by sand, dirt, mud, ash, and glass for down and down-diagonal falling.
 - `gas-rise`, used by steam and smoke for upward drift.
 - `energy-rise`, used by fire for short-lived upward flicker.
 
@@ -117,7 +117,7 @@ Level-authored collision geometry. It is not cleared by reset except through ful
 
 ### Bucket Intake
 
-Goal region that accepts only a configured target element for MVP. Wrong elements do not count and should be blocked, ignored, or visibly rejected based on later tuning.
+Goal region that accepts only a configured target element for MVP. Wrong elements do not count, but they may enter or settle inside the bucket without causing failure.
 
 ### Emitter
 
@@ -183,7 +183,7 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Type: powder.
 - Direction: gravity-driven.
 - Bucket target: yes.
-- Reaction: none in MVP.
+- Reaction: becomes glass when contacting fire.
 
 ### Fire
 
@@ -228,6 +228,13 @@ Fire is a dynamic element with flicker-like movement and reaction behavior. It m
 - Direction: gravity-driven.
 - Bucket target: yes.
 - Reaction: none in the first combustion slice.
+
+### Glass
+
+- Type: powder.
+- Direction: gravity-driven.
+- Bucket target: yes.
+- Reaction: none in the first glass slice.
 
 ## Current Reaction Rules
 
@@ -282,6 +289,15 @@ Smoke and ash deliberately reuse existing gas and powder movement. Add specializ
 
 If that makes levels too easy or fire too fragile, revise after playtesting.
 
+### Fire + Sand -> Glass
+
+When fire contacts sand in an orthogonal or diagonal neighboring cell:
+
+- Glass is created at the sand cell.
+- The fire and sand reactants are consumed.
+
+Glass deliberately reuses existing powder movement so the first glass level adds a reaction outcome without adding new movement code.
+
 ### Hearths
 
 Fire should first appear through level-authored hearth objects instead of edge emitters. A hearth:
@@ -304,8 +320,9 @@ Reaction priority should be explicit. Current priority:
 3. Water + fire.
 4. Fire + mud.
 5. Fire + dirt.
-6. Dirt + water.
-7. Movement.
+6. Fire + sand.
+7. Dirt + water.
+8. Movement.
 
 This keeps target collection predictable. If reactions need to happen before buckets for better gameplay, change the order deliberately and update tests.
 
@@ -325,6 +342,8 @@ The current registered rules are:
   cell, consuming the fire and mud.
 - Particle fire + particle dirt -> smoke at the fire cell and ash at the dirt
   cell, consuming the fire and dirt.
+- Particle fire + particle sand -> glass at the sand cell, consuming the fire
+  and sand.
 - Particle dirt + liquid-layer water -> mud at the dirt cell, consuming the
   water and dirt.
 - Liquid-layer water in a hearth heat zone -> steam at the heated cell,
@@ -339,13 +358,13 @@ trigger shape.
 
 Player drawing stamps line cells along the pointer path using grid-space interpolation. Lines:
 
-- Block water, sand, fire, steam, dirt, mud, smoke, and ash.
+- Block water, sand, fire, steam, dirt, mud, smoke, ash, and glass.
 - Persist until reset.
 - Are not individually erasable.
 - Have no ink limit.
 - May be dissolved by acid later.
 
-Normal player-facing MVP input is black-line drawing only. During development and playtesting, debug UI may expose sandbox brushes for every element registered in `ELEMENTS`. These brushes are temporary dev tools; they add material through the world API so they respect solid blockers and conserve existing water volume when sand is stamped into liquid, but they must not be required by campaign levels.
+Normal player-facing MVP input is black-line drawing only. During development and playtesting, debug UI may expose sandbox brushes for every element registered in `ELEMENTS`. These brushes are temporary dev tools; they add material through the world API so they respect solid blockers and conserve existing water volume when powder is stamped into liquid, but they must not be required by campaign levels.
 
 ## Bucket Logic
 
@@ -393,13 +412,14 @@ Performance tuning should prioritize:
 
 Core tests should cover:
 
-- Movement for water, sand, steam, dirt, mud, smoke, and ash.
+- Movement for water, sand, steam, dirt, mud, smoke, ash, and glass.
 - Collision against drawn lines.
 - Emitter spawning.
 - Water + fire reaction.
 - Dirt + water reaction.
 - Fire + mud reaction.
 - Fire + dirt reaction.
+- Fire + sand reaction.
 - Bucket matching and wrong-element non-counting behavior.
 - Reset behavior.
 - Determinism with a fixed seed and input sequence.

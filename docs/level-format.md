@@ -76,6 +76,7 @@ MVP emitters are continuous. `ratePerTick` may be fractional; emitter state carr
 - `mud`: slurry pipe.
 - `smoke`: soot vent.
 - `ash`: ash sifter.
+- `glass`: glass kiln.
 
 ## Buckets
 
@@ -230,6 +231,14 @@ otherwise unlocked levels, not skipping ahead through the campaign by default.
 - Fixed hearth.
 - Mud bucket and upside-down smoke bucket.
 - Open space gives players room to choose how much dirt to wet and how much to heat.
+
+### 010-melt-the-sand
+
+- Teaches the first glass reaction.
+- Sand emitter.
+- Fixed hearth.
+- Glass bucket.
+- Open space lets players choose how to move sand through heat before catching the glass.
 
 ## Level Validation
 

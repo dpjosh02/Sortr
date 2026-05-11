@@ -20,6 +20,7 @@ describe("LEVEL_CATALOG", () => {
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("007-warm-the-mud");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("008-smoke-and-ash");
     expect(LEVEL_CATALOG.map((level) => level.id)).toContain("009-branching-reactions");
+    expect(LEVEL_CATALOG.map((level) => level.id)).toContain("010-melt-the-sand");
   });
 
   it("uses valid bucket definitions", () => {
@@ -137,6 +138,10 @@ describe("LEVEL_CATALOG", () => {
       {
         id: "009-branching-reactions",
         lesson: "Split one dirt source into wet and hot reaction paths.",
+      },
+      {
+        id: "010-melt-the-sand",
+        lesson: "Heat sand into glass before guiding it to the bucket.",
       },
     ]);
   });

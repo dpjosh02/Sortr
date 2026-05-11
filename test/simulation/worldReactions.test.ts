@@ -190,6 +190,41 @@ describe("world reactions and fire", () => {
     expect(totalWater(world)).toBeCloseTo(1);
   });
 
+  it("melts sand touching fire into glass", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "fire");
+    world.setCell(2, 1, "sand");
+    world.step();
+
+    expect(countElementCells(world, "fire")).toBe(0);
+    expect(countElementCells(world, "sand")).toBe(0);
+    expect(countElementCells(world, "glass")).toBe(1);
+  });
+
+  it("prioritizes water and fire before fire can melt neighboring sand", () => {
+    const world = createWorld({
+      emitters: [],
+      height: 4,
+      seed: 1,
+      width: 4,
+    });
+
+    world.setCell(1, 1, "water");
+    world.setCell(2, 1, "fire");
+    world.setCell(2, 2, "sand");
+    world.step();
+
+    expect(countElementCells(world, "steam")).toBe(1);
+    expect(countElementCells(world, "glass")).toBe(0);
+    expect(countElementCells(world, "sand")).toBe(1);
+  });
+
   it("blocks falling particles with hearth solids", () => {
     const world = createWorld({
       emitters: [],

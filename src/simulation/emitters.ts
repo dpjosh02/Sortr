@@ -7,6 +7,7 @@ export type EmitterFixtureType =
   | "charcoal-bed"
   | "clay-chute"
   | "copper-vent"
+  | "glass-kiln"
   | "hose"
   | "sand-pump"
   | "slurry-pipe"

@@ -14,9 +14,19 @@ import {
 
 describe("element registry", () => {
   it("keeps current elements registered with behavior categories", () => {
-    expect(ELEMENTS).toEqual(["water", "sand", "fire", "steam", "dirt", "mud", "smoke", "ash"]);
+    expect(ELEMENTS).toEqual([
+      "water",
+      "sand",
+      "fire",
+      "steam",
+      "dirt",
+      "mud",
+      "smoke",
+      "ash",
+      "glass",
+    ]);
     expect(getElementsByBehavior("liquid-flow")).toEqual(["water"]);
-    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud", "ash"]);
+    expect(getElementsByBehavior("powder-fall")).toEqual(["sand", "dirt", "mud", "ash", "glass"]);
     expect(getElementsByBehavior("gas-rise")).toEqual(["steam", "smoke"]);
     expect(getElementsByBehavior("energy-rise")).toEqual(["fire"]);
   });
@@ -30,6 +40,7 @@ describe("element registry", () => {
     expect(usesLiquidLayer("mud")).toBe(false);
     expect(usesLiquidLayer("smoke")).toBe(false);
     expect(usesLiquidLayer("ash")).toBe(false);
+    expect(usesLiquidLayer("glass")).toBe(false);
   });
 
   it("keeps renderer palettes in element registry data", () => {
@@ -41,6 +52,7 @@ describe("element registry", () => {
     expect(getElementPalette("mud")[0]).toBe("#5f4a38");
     expect(getElementPalette("smoke")[0]).toBe("#8b8f91");
     expect(getElementPalette("ash")[0]).toBe("#6f6a62");
+    expect(getElementPalette("glass")[0]).toBe("#a8d8cf");
   });
 });
 
@@ -50,6 +62,7 @@ describe("reaction rule registry", () => {
       "water-fire-to-steam",
       "fire-mud-to-steam-dirt",
       "fire-dirt-to-smoke-ash",
+      "fire-sand-to-glass",
       "dirt-water-to-mud",
       "hearth-heat-water-to-steam",
     ]);
@@ -117,6 +130,26 @@ describe("reaction rule registry", () => {
           },
           {
             element: "ash",
+            location: "neighbor-cell",
+          },
+        ],
+        source: {
+          element: "fire",
+          storage: "particle",
+        },
+      },
+      {
+        consumeNeighbor: true,
+        consumeSource: true,
+        id: "fire-sand-to-glass",
+        kind: "neighbor-contact",
+        neighbor: {
+          element: "sand",
+          storage: "particle",
+        },
+        products: [
+          {
+            element: "glass",
             location: "neighbor-cell",
           },
         ],

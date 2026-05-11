@@ -181,4 +181,44 @@ export const CHEMISTRY_LEVELS: readonly LevelDefinition[] = [
       width: 240,
     },
   },
+  {
+    background: "#e0e6df",
+    cellSize: 4,
+    designerNotes:
+      "This level introduces glass with a familiar setup: sand falls, fire is fixed in a hearth, and the bucket is broad enough for several ramp shapes after the reaction point.",
+    id: "010-melt-the-sand",
+    lesson: "Heat sand into glass before guiding it to the bucket.",
+    title: "Melt the Sand",
+    world: {
+      buckets: [
+        {
+          id: "glass-bucket",
+          intake: "top",
+          rect: { height: 24, width: 44, x: 162, y: 126 },
+          required: 24,
+          target: "glass",
+        },
+      ],
+      emitters: [
+        {
+          edge: "top",
+          element: "sand",
+          id: "sand-source",
+          range: { end: 70, start: 64 },
+          ratePerTick: 0.55,
+        },
+      ],
+      hearths: [
+        {
+          flameRatePerTick: 0.8,
+          heatRadius: 2,
+          id: "glass-hearth",
+          rect: { height: 4, width: 18, x: 112, y: 148 },
+        },
+      ],
+      height: 160,
+      seed: 20260511,
+      width: 240,
+    },
+  },
 ];

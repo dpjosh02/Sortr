@@ -317,6 +317,29 @@ User test:
 
 - Confirm the branching level feels like a flexible chemistry puzzle rather than a precision drawing test.
 
+## Snapshot 14: Melt The Sand
+
+Goal: Add a compact glass chemistry chain without introducing new movement behavior or player tools.
+
+Deliverables:
+
+- `glass` element registry entry using existing powder movement.
+- Fire + sand -> glass reaction rule in the registry.
+- One hand-authored campaign level that teaches heating sand into glass.
+- Tests for element registration, reaction behavior, reaction priority, fixture defaults, and level validation.
+- Documentation updated to describe the current glass chain.
+
+Exit criteria:
+
+- Existing campaign levels still work.
+- The new level teaches one idea: heat sand into falling glass.
+- No new player tools, tool-like mechanics, persistence, or unrestricted level select are added.
+- `npm run verify` passes.
+
+User test:
+
+- Confirm the glass level reads as a chemistry-chain puzzle and does not require pixel-perfect routing.
+
 ## Later Milestones
 
 - Continue chemistry chain expansion: oil and fire, ice and melt/freeze, salt and brine, or similar reaction families.

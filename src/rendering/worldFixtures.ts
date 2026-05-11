@@ -2,11 +2,14 @@ import type { ElementType } from "../simulation/elements";
 import type { EmitterDefinition, EmitterFixtureType } from "../simulation/emitters";
 import type { HearthSnapshot, ObstacleDefinition } from "../simulation/world";
 
+import { drawGlassKiln, drawGrains, drawOutlinedRect } from "./fixtureDrawing";
+
 export const DEFAULT_EMITTER_FIXTURE_BY_ELEMENT: Readonly<Record<ElementType, EmitterFixtureType>> =
   {
     ash: "ash-sifter",
     dirt: "clay-chute",
     fire: "charcoal-bed",
+    glass: "glass-kiln",
     mud: "slurry-pipe",
     sand: "sand-pump",
     smoke: "soot-vent",
@@ -132,6 +135,9 @@ function drawEmitterFixture(
       return;
     case "copper-vent":
       drawCopperVent(context, bounds, options.cellSize, options.tick);
+      return;
+    case "glass-kiln":
+      drawGlassKiln(context, bounds, options.cellSize, options.tick);
       return;
     case "hose":
       drawHose(context, bounds, options.cellSize, options.tick);
@@ -372,29 +378,4 @@ function drawAshSifter(
   );
   context.fillStyle = "#6f6a62";
   drawGrains(context, bounds.centerX, bounds.y + cellSize * 4, cellSize);
-}
-
-function drawOutlinedRect(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  fill: string,
-): void {
-  context.fillStyle = "#111111";
-  context.fillRect(x, y, width, height);
-  context.fillStyle = fill;
-  context.fillRect(x + 1, y + 1, Math.max(1, width - 2), Math.max(1, height - 2));
-}
-
-function drawGrains(
-  context: CanvasRenderingContext2D,
-  centerX: number,
-  y: number,
-  cellSize: number,
-): void {
-  context.fillRect(centerX - cellSize, y, cellSize, cellSize);
-  context.fillRect(centerX, y + cellSize, cellSize, cellSize);
-  context.fillRect(centerX + cellSize, y, cellSize, cellSize);
 }

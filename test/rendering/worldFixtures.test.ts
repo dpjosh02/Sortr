@@ -12,6 +12,7 @@ describe("emitter fixtures", () => {
       ash: "ash-sifter",
       dirt: "clay-chute",
       fire: "charcoal-bed",
+      glass: "glass-kiln",
       mud: "slurry-pipe",
       sand: "sand-pump",
       smoke: "soot-vent",
